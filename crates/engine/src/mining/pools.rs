@@ -222,7 +222,8 @@ impl Pools {
     ///    pool whose tag contains another's (`/ViaBTC/TATMAS Pool/` holds `/ViaBTC/`) wins over
     ///    it. Equal lengths: the one found first, then the lower id. The tag is written by
     ///    whoever built the block. A script laid out as Stratum V2's reference implementation
-    ///    writes it ([`sv2::tag`]) is searched in its pool field only: the miner field is the
+    ///    writes it ([`sv2::tag`]) is searched in its pool field only, between its delimiters
+    ///    (`/<pool>/`, so a tag listed with slashes still matches): the miner field is the
     ///    miner's own words, and with Job Declaration the miner builds the whole script, so a
     ///    pool's name there does not make the block that pool's.
     /// 2. **Otherwise a payout to a pool's address**, the first in output order. A payout only
@@ -231,7 +232,7 @@ impl Pools {
     ///    convention itself leaves a block whose pool field is empty to be named by its payout.
     /// 3. **Otherwise [`UNKNOWN`].**
     pub fn attribute(&self, tag: &[u8], payouts: &[ScriptBuf]) -> (u16, Method) {
-        let named = sv2::tag(tag).map_or(tag, |t| t.pool);
+        let named = sv2::tag(tag).map_or(tag, |t| t.delimited);
         let mut best: Option<(usize, usize, u16)> = None;
         for (t, id) in &self.tags {
             if best.is_some_and(|(len, _, _)| t.len() < len) {
@@ -490,6 +491,9 @@ mod tests {
         assert_eq!(list().attribute(cut, &[]), (foundry, Method::Tag));
         let older = sv2_script("/solo//ViaBTC//");
         assert_eq!(list().attribute(&older, &[]), (viabtc, Method::Tag));
+        // A pool field that is the words of a tag listed with slashes is that pool's.
+        let moved = sv2_script("Sv2/ViaBTC//");
+        assert_eq!(list().attribute(&moved, &paid), (viabtc, Method::Tag));
     }
 
     /// In the pool field the listed tags match as in any script: as part of it, ignoring ASCII
@@ -519,9 +523,14 @@ mod tests {
         assert_eq!(by("Sv2///"), (3, Method::Address));
         let unpaid = p.attribute(&sv2_script("Sv2/nobody/beta/"), &[]);
         assert_eq!(unpaid, (UNKNOWN, Method::None));
-        // The pool field holds no `/`, so a listed tag that holds one never matches it.
-        assert_eq!(by("Sv2/slashed//"), (3, Method::Address));
+        // The field is searched between its delimiters, so a tag listed with slashes matches a
+        // pool field that is exactly its words, and never the miner field.
+        assert_eq!(by("Sv2/slashed//"), (6, Method::Tag));
+        assert_eq!(by("Sv2/Slashed/a miner/"), (6, Method::Tag));
+        assert_eq!(by("Sv2/slashed pool//"), (3, Method::Address));
         assert_eq!(by("Sv2//slashed//"), (3, Method::Address));
+        assert_eq!(by("Sv2/nobody/slashed/"), (3, Method::Address));
+        assert_eq!(by("Sv2/nobody//slashed//"), (3, Method::Address));
         assert_eq!(p.attribute(b"\x03abc/Slashed/", &[]), (6, Method::Tag));
     }
 

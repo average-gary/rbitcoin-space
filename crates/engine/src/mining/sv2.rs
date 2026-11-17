@@ -44,6 +44,9 @@ const MAX_DIRECT_PUSH: u8 = 0x4b;
 pub struct Tag<'a> {
     /// Written by the pool. Empty when the miner built the job (Job Declaration).
     pub pool: &'a [u8],
+    /// The pool's field between its two delimiters, as the script holds it: `/<pool>/`. A tag a
+    /// pool list writes with slashes, like `/ViaBTC/`, is found here and not in `pool`.
+    pub delimited: &'a [u8],
     /// The miner's own words; may hold `/`.
     pub miner: &'a [u8],
 }
@@ -87,7 +90,15 @@ fn fields(push: &[u8]) -> Option<Tag<'_>> {
     let mut halves = inside.splitn(2, |&b| b == b'/');
     let pool = halves.next()?;
     let miner = halves.next()?;
-    Some(Tag { pool, miner })
+    // From the `/` that ends the mark to the one that ends the pool's field.
+    let delimited = push
+        .get(MARK.len().saturating_sub(1)..)?
+        .get(..pool.len().saturating_add(2))?;
+    Some(Tag {
+        pool,
+        delimited,
+        miner,
+    })
 }
 
 /// Whether `rest` is exactly one direct push of 1 to [`MAX_EXTRANONCE`] bytes.
@@ -175,6 +186,18 @@ mod tests {
         assert_eq!(read(&script(HEIGHT, b"Sv2/p/m/")), Some(("p", "m")));
         // Only the first delimiter divides: the rest is the miner's.
         assert_eq!(read(&script(HEIGHT, b"Sv2//a/b//")), Some(("", "a/b/")));
+        // The pool's field with its delimiters, whatever the miner's holds.
+        for (text, delimited) in [
+            (&b"Sv2///"[..], &b"//"[..]),
+            (b"Sv2/pool//", b"/pool/"),
+            (b"Sv2//miner/", b"//"),
+            (b"Sv2/p/m/", b"/p/"),
+            (b"Sv2//a/b//", b"//"),
+            ("Sv2/MARA🇺🇸🇺🇸//".as_bytes(), "/MARA🇺🇸🇺🇸/".as_bytes()),
+        ] {
+            let script = script(HEIGHT, text);
+            assert_eq!(tag(&script).unwrap().delimited, delimited, "{text:?}");
+        }
         // The longest direct push.
         let mut long = b"Sv2/".to_vec();
         long.extend_from_slice(&[b'p'; 69]);
