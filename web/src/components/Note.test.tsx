@@ -66,6 +66,24 @@ describe("Note", () => {
     expect(shown()).toBeNull();
   });
 
+  it("opens on a tap that gives the button no focus, as in Safari", () => {
+    const el = mount(() => <Note focusable title="Slow: 20 min or more" figure="35 min 8 s" />);
+    const button = el.querySelector("button");
+    if (!button) throw new Error("no button");
+    pointer(button, "pointerenter", "touch");
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    flush();
+    expect(document.activeElement).not.toBe(button);
+    expect(shown()?.textContent).toBe("Slow: 20 min or more");
+    // A second tap leaves it open; a press elsewhere closes it.
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    flush();
+    expect(shown()).not.toBeNull();
+    document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    flush();
+    expect(shown()).toBeNull();
+  });
+
   it("is a button's description, opened by its focus and closed by Escape", () => {
     const el = mount(() => (
       <Note focusable title="Slow: 20 min or more" figure="35 min 8 s">

@@ -77,7 +77,8 @@ export function Note(props: {
   };
   const hide = () => close?.();
   // A mouse only: a touch is a tap on what the figure sits in, such as a block's link, or, on a
-  // button, its focus. The note stays while the mouse is on it, so it can be read up close.
+  // button, its focus or its click: Safari gives a tapped button no focus. The note stays while
+  // the mouse is on it, so it can be read up close.
   const stay = () => clearTimeout(leaving);
   const enter = (e: PointerEvent) => {
     if (e.pointerType !== "mouse") return;
@@ -122,6 +123,7 @@ export function Note(props: {
       onPointerLeave={leave}
       onFocusIn={show}
       onFocusOut={hide}
+      onClick={show}
     >
       {inside()}
     </button>
