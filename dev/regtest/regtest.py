@@ -279,14 +279,21 @@ def inscription_output(content_type, body):
     return spk
 
 
-def submit_tagged_block(tag_bytes, short_by):
-    """Mines an empty block by hand whose coinbase carries tag_bytes after the height, and claims
-    short_by sats less than the subsidy. Returns (block hash, coinbase txid)."""
+def submit_tagged_block(tag_bytes, short_by=0, extranonce=0):
+    """Mines an empty block by hand whose coinbase carries tag_bytes after the height, then a push
+    of extranonce zero bytes if any, and claims short_by sats less than the subsidy. Returns
+    (block hash, coinbase txid)."""
     prev = rpc("getbestblockhash")
     head = rpc("getblockheader", prev)
     height = head["height"] + 1
     bip34 = height.to_bytes((height.bit_length() + 8) // 8, "little")
+    if len(tag_bytes) > 75 or not 0 <= extranonce <= 75:
+        sys.exit("regtest: a push here holds at most 75 bytes")
     script_sig = bytes([len(bip34)]) + bip34 + bytes([len(tag_bytes)]) + tag_bytes
+    if extranonce:
+        script_sig += bytes([extranonce]) + bytes(extranonce)
+    if len(script_sig) > 100:
+        sys.exit("regtest: a coinbase script holds at most 100 bytes")
     reward = (50 * 100_000_000 >> (height // 150)) - short_by  # regtest halves every 150 blocks
     coinbase = (struct.pack("<i", 2) + b"\x01" + b"\x00" * 32 + b"\xff\xff\xff\xff" + varint(len(script_sig))
                 + script_sig + b"\xff\xff\xff\xff" + b"\x01" + struct.pack("<q", reward) + varint(len(MINER))
@@ -320,6 +327,15 @@ def hostile():
     mine(1)
     block, coinbase = submit_tagged_block(HOSTILE_TAG, 1_000)
     return {"tx": txid, "reveal": reveal, "block": block, "coinbase": coinbase}
+
+
+def tagged_blocks(texts, extranonce):
+    """One hand-built empty block per text, its coinbase tagged with it."""
+    made = []
+    for text in texts:
+        block, coinbase = submit_tagged_block(text.encode(), extranonce=extranonce)
+        made.append({"block": block, "coinbase": coinbase})
+    return made
 
 
 def rbf(gap=0.0):
@@ -434,6 +450,11 @@ def main():
     sub.add_parser("scenario", help="reset, build the known chain, print its manifest").set_defaults(f=cmd_scenario)
     sub.add_parser("hostile", help="mine hostile OP_RETURN text, inscriptions and a coinbase tag").set_defaults(
         f=lambda _: print(json.dumps(hostile(), indent=2)))
+    t = sub.add_parser("tagged", help="submit an empty block per TEXT, its coinbase tagged with it")
+    t.add_argument("text", nargs="+")
+    t.add_argument("--extranonce", type=int, default=0, metavar="N",
+                   help="push N zero bytes after the tag; 20 is Stratum V2's layout (default: no push)")
+    t.set_defaults(f=lambda a: print(json.dumps(tagged_blocks(a.text, a.extranonce), indent=2)))
     args = p.parse_args()
     try:
         args.f(args)
