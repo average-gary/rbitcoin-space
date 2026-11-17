@@ -7,6 +7,8 @@ import { Link } from "../../components/Link";
 import type { Outspend, Transaction, Vout } from "../../lib/esplora";
 import { feeColor, groupDigits } from "../../lib/format";
 import { paths } from "../../lib/network";
+import type { TagPart } from "../block/chain";
+import { type ChainText, coinbaseText, inputText, outputText } from "./chaintext";
 import { classify, isText, opReturnData, printable } from "./script";
 import {
   cssMs,
@@ -20,6 +22,66 @@ import {
 } from "./tx";
 
 export type Side = "in" | "out";
+/** MOCKUP: where a card's chain text sits. A: in the name slot. B: on a memo line of its own. */
+export type Place = "a" | "b";
+
+/** Chain text as text nodes: hidden runs as muted dots, counted in their title. */
+export function ChainWords(props: { parts: TagPart[] }) {
+  return (
+    <For each={props.parts}>
+      {(p) =>
+        "text" in p ? (
+          p.text
+        ) : (
+          <span
+            class="tx-hidden"
+            title={`${p.hidden} ${p.hidden === 1 ? "character" : "characters"} that are not text`}
+          >
+            {"·".repeat(Math.min(p.hidden, 6))}
+          </span>
+        )
+      }
+    </For>
+  );
+}
+
+/** Quoted chain text for a card. */
+const quoted = (parts: TagPart[]): JSX.Element => (
+  <span class="tx-flow__words">
+    “<ChainWords parts={parts} />”
+  </span>
+);
+
+/** A card's memo line: the text (with its label when the name above does not give it), or what a payload that is not text is. */
+function Memo(props: { t: ChainText | null; label: boolean }) {
+  return (
+    <Show when={props.t}>
+      {(t) => (
+        <Show
+          when={t().parts}
+          fallback={
+            <Show when={t().about}>
+              {(a) => (
+                <span class="tx-flow__memo tx-flow__memo--about">
+                  {t().label}, {a()}
+                </span>
+              )}
+            </Show>
+          }
+        >
+          {(parts) => (
+            <span class="tx-flow__memo">
+              <Show when={props.label}>
+                <span class="tx-flow__memo-label">{t().label}</span>{" "}
+              </Show>
+              {quoted(parts())}
+            </span>
+          )}
+        </Show>
+      )}
+    </Show>
+  );
+}
 export interface Selection {
   side: Side;
   index: number;
@@ -57,7 +119,9 @@ export function Flow(props: {
   outspends: () => Outspend[] | null | undefined;
   selected: Selection | null;
   onSelect: (s: Selection) => void;
+  place?: Place;
 }) {
+  const place = () => props.place ?? "b";
   const [inPresses, setInPresses] = createSignal(0);
   const [outPresses, setOutPresses] = createSignal(0);
   const vin = () => props.tx.vin ?? [];
@@ -217,7 +281,16 @@ export function Flow(props: {
   const who = (out: Vout | null | undefined): JSX.Element => (
     <Show
       when={out?.scriptpubkey_address}
-      fallback={<span class="tx-flow__label">{out ? scriptLabel(out) : "Unknown"}</span>}
+      fallback={
+        <Show
+          when={out && outputText(out)?.parts}
+          fallback={<span class="tx-flow__label">{out ? scriptLabel(out) : "Unknown"}</span>}
+        >
+          {(parts) =>
+            place() === "a" ? quoted(parts()) : <span class="tx-flow__label">OP_RETURN</span>
+          }
+        </Show>
+      }
     >
       {(a) => <Hash value={a()} href={paths.address(a())} fit copy={false} />}
     </Show>
@@ -256,11 +329,22 @@ export function Flow(props: {
               data-kind="in"
               data-key="0"
             >
-              <span class="tx-flow__who">Coinbase</span>
+              <span class="tx-flow__who">
+                <Show when={place() === "a" && coinbaseText(props.tx)?.parts} fallback="Coinbase">
+                  {(parts) => quoted(parts())}
+                </Show>
+              </span>
               <span class="tx-flow__amt">
                 <Amount sats={totalOut(props.tx)} unit={false} fit />
               </span>
-              <span class="tx-flow__meta">New coins and fees</span>
+              <span class="tx-flow__meta">
+                {place() === "a" && coinbaseText(props.tx)?.parts
+                  ? "Coinbase: new coins and fees"
+                  : "New coins and fees"}
+              </span>
+              <Show when={place() === "b"}>
+                <Memo t={coinbaseText(props.tx)} label={false} />
+              </Show>
               {openButton("in", 0)}
             </li>
           }
@@ -283,6 +367,7 @@ export function Flow(props: {
                     ? classify(input.prevout.scriptpubkey).label
                     : ""}
                 </span>
+                <Memo t={inputText(input)} label />
                 {openButton("in", i())}
               </li>
             )}
@@ -334,11 +419,17 @@ export function Flow(props: {
                 <Show when={out.scriptpubkey_address}>
                   <span>{classify(out.scriptpubkey).label}</span>
                 </Show>
+                <Show when={place() === "a" && outputText(out)?.parts}>
+                  <span>OP_RETURN</span>
+                </Show>
                 <Spent
                   unspendable={whyUnspendable(props.tx, out) !== null}
                   spend={props.outspends()?.[i()]}
                 />
               </span>
+              <Show when={place() === "b" && outputText(out)?.parts}>
+                <Memo t={outputText(out)} label={false} />
+              </Show>
               {openButton("out", i())}
             </li>
           )}

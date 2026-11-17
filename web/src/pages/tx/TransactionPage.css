@@ -1111,3 +1111,78 @@
     }
   }
 }
+
+/* MOCKUP: chain text on the cards (a memo line under the ledger row) and in the inspector. */
+@layer pages {
+  .tx-flow__item {
+    grid-template-areas:
+      "who amt open"
+      "meta meta open"
+      "memo memo memo";
+  }
+  .tx-flow__memo {
+    grid-area: memo;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    margin: var(--space-1) 0 var(--space-1);
+    padding-top: var(--space-1);
+    border-top: 1px dashed var(--color-line);
+    color: var(--color-text);
+    line-height: var(--leading-snug);
+    overflow-wrap: anywhere;
+  }
+  .tx-flow__memo-label,
+  .tx-flow__memo--about {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .tx-flow__memo--about {
+    display: block;
+  }
+  /* In the name slot (A): one line, cut at its end; the whole is in the inspector. */
+  .tx-flow__who > .tx-flow__words {
+    display: block;
+    overflow: hidden;
+    color: var(--color-text);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .tx-hidden {
+    color: var(--color-text-muted);
+    letter-spacing: -0.1em;
+  }
+  .tx-text {
+    width: 100%;
+    max-height: 16rem;
+    overflow: auto;
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-m);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    font-size: var(--text-md);
+    line-height: var(--leading-body);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  @container (max-width: 19rem) {
+    .tx-flow__item {
+      grid-template-areas:
+        "amt ."
+        "who who"
+        "meta meta"
+        "memo memo";
+    }
+    /* A narrow card's lines are short: one more of them for the text. */
+    .tx-flow__memo {
+      -webkit-line-clamp: 3;
+    }
+  }
+}
+@layer pages {
+  .tx-fact__wrap {
+    overflow-wrap: anywhere;
+  }
+}

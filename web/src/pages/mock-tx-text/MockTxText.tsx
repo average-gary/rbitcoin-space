@@ -6,7 +6,7 @@ import { Link } from "../../components/Link";
 import { SectionHeader } from "../../components/SectionHeader";
 import type { Outspend, Transaction } from "../../lib/esplora";
 import { usePageTitle } from "../../lib/page";
-import { Flow, type Selection } from "../tx/Flow";
+import { Flow, type Place, type Selection } from "../tx/Flow";
 import { Inspector } from "../tx/Inspector";
 import "../tx/TransactionPage.css";
 import "./MockTxText.css";
@@ -66,13 +66,19 @@ export default function MockTxText() {
         </For>
       </nav>
       <Show when={sample()} keyed>
-        {(s) => <View s={s} initial={parseSel(search["sel"])} />}
+        {(s) => (
+          <View
+            s={s}
+            initial={parseSel(search["sel"])}
+            place={search["place"] === "a" ? "a" : "b"}
+          />
+        )}
       </Show>
     </div>
   );
 }
 
-function View(props: { s: Sample; initial: Selection | null }) {
+function View(props: { s: Sample; initial: Selection | null; place: Place }) {
   const [selected, setSelected] = createSignal<Selection | null>(props.initial);
   const select = (s: Selection) => {
     const cur = selected();
@@ -87,6 +93,7 @@ function View(props: { s: Sample; initial: Selection | null }) {
           outspends={() => props.s.outspends}
           selected={selected()}
           onSelect={select}
+          place={props.place}
         />
       </section>
       <div class="tx-rail tx-rail--open">
