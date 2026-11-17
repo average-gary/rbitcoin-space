@@ -1,0 +1,131 @@
+/* MOCKUP, never merged: the page that lays out the link preview cards. */
+@layer pages {
+  .pc {
+    display: grid;
+    gap: var(--space-7);
+    padding: var(--space-5) var(--gutter) var(--space-8);
+  }
+  .pc-head h1 {
+    margin: 0 0 var(--space-2);
+  }
+  .pc-head p {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+  .pc-direction {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .pc-direction h2 {
+    margin: 0;
+  }
+  .pc-notes {
+    display: grid;
+    max-width: 100%;
+    grid-template-columns: max-content minmax(0, 60ch);
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+  .pc-notes dt {
+    color: var(--color-text-muted);
+  }
+  .pc-notes dd {
+    margin: 0;
+  }
+  .pc-row {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      "cap cap"
+      "full chats";
+    justify-content: start;
+    gap: var(--space-2) var(--space-5);
+    margin: 0;
+  }
+  .pc-row figcaption {
+    grid-area: cap;
+    font-weight: var(--weight-medium);
+  }
+  .pc-full {
+    grid-area: full;
+    width: 1200px;
+    max-width: 100%;
+  }
+  .pc-full svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .pc-chats {
+    grid-area: chats;
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+  .pc-card {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  /* A chat thread, drawn plainly: no app's own look. */
+  .pc-chat {
+    box-sizing: border-box;
+    width: 524px;
+    max-width: 100%;
+    padding: 24px 32px;
+    font-family: system-ui, sans-serif;
+  }
+  .pc-chat--dark {
+    background: #0f1418;
+    --bubble: #26313a;
+    --bubble-text: #e9eef2;
+    --bubble-muted: #93a1ac;
+    --bubble-link: #7cc0ff;
+  }
+  .pc-chat--light {
+    background: #dfe4e8;
+    --bubble: #ffffff;
+    --bubble-text: #111417;
+    --bubble-muted: #5f6b75;
+    --bubble-link: #1a6fc2;
+  }
+  .pc-bubble {
+    max-width: 460px;
+    padding: 8px 8px 10px;
+    border-radius: 14px;
+    background: var(--bubble);
+    color: var(--bubble-text);
+  }
+  .pc-url {
+    margin: 2px 6px 8px;
+    font-size: 15px;
+    color: var(--bubble-link);
+  }
+  .pc-preview svg {
+    display: block;
+    width: 100%;
+    max-width: 444px;
+    height: auto;
+    border-radius: 8px;
+  }
+  .pc-site {
+    margin: 8px 6px 0;
+    font-size: 13px;
+    color: var(--bubble-muted);
+  }
+  .pc-title {
+    margin: 2px 6px 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  @media (width < 1800px) {
+    .pc-row {
+      grid-template-columns: minmax(0, auto);
+      grid-template-areas: "cap" "full" "chats";
+    }
+    .pc-chats {
+      grid-template-columns: repeat(auto-fit, minmax(0, 524px));
+    }
+  }
+}
