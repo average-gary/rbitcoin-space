@@ -41,6 +41,10 @@ pub struct Facts {
     pub fee_bands: Bands,
     /// Who mined it, by the pool list's rules.
     pub miner: Miner,
+    /// Whether the coinbase script is laid out as Stratum V2's reference implementation writes it
+    /// ([`Coinbase::is_sv2`]). The block's builder wrote those bytes, as any coinbase tag: nothing
+    /// proves the protocol that was spoken.
+    pub sv2: bool,
 }
 
 /// Who mined a block: a pool from the shipped list, or Unknown. Never text from the block, whose
@@ -97,6 +101,7 @@ pub fn facts(block: &Block) -> Facts {
             *b += u64::from(tx.vsize);
         }
     }
+    let coinbase = Coinbase::from_parts(block.coinbase.script.as_bytes(), &block.coinbase.outputs);
     Facts {
         id: block.hash,
         height: block.height,
@@ -106,10 +111,8 @@ pub fn facts(block: &Block) -> Facts {
         weight,
         fee_rate: rates(paying),
         fee_bands: Bands::new(fee_bands),
-        miner: Miner::of(&Coinbase::from_parts(
-            block.coinbase.script.as_bytes(),
-            &block.coinbase.outputs,
-        )),
+        miner: Miner::of(&coinbase),
+        sv2: coinbase.is_sv2(),
     }
 }
 
@@ -299,6 +302,11 @@ mod tests {
     }
 
     fn mined(tag: &[u8], pays: &str) -> Miner {
+        with_coinbase(tag, pays).miner
+    }
+
+    /// The facts of a block whose coinbase script is `tag`, paying the address `pays`.
+    fn with_coinbase(tag: &[u8], pays: &str) -> Facts {
         use std::str::FromStr;
         let script = bitcoin::Address::from_str(pays)
             .unwrap()
@@ -318,7 +326,42 @@ mod tests {
                 },
             ],
         };
-        facts(&b).miner
+        facts(&b)
+    }
+
+    #[test]
+    fn a_coinbase_laid_out_as_stratum_v2_writes_it_is_marked() {
+        const ELSEWHERE: &str = "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq";
+        // Mainnet 976,280's coinbase script: the height, `Sv2/MARA🇺🇸🇺🇸//`, a 20-byte extranonce.
+        let real = bitcoin::ScriptBuf::from_hex(
+            "0398e50e1a5376322f4d415241f09f87baf09f87b8f09f87baf09f87b82f2f\
+             14020000140000000000000000000005cf0007c4fa",
+        )
+        .unwrap();
+        let f = with_coinbase(real.as_bytes(), ELSEWHERE);
+        assert!(f.sv2);
+        assert_eq!(f.miner.slug, "marapool");
+        // Named or not: the layout alone decides.
+        let unnamed = b"\x03\x98\xe5\x0e\x06Sv2///\x01\x00";
+        let f = with_coinbase(unnamed, ELSEWHERE);
+        assert!(f.sv2);
+        assert_eq!(f.miner, Miner::UNKNOWN);
+        // The words without the layout are not it: no extranonce push ends the script.
+        for tag in [
+            &b"\x03\x98\xe5\x0e\x06Sv2///"[..],
+            b"\x03\x98\xe5\x0e/Sv2/ViaBTC//",
+            b"\x03\x97\xe2\x0e/ViaBTC/",
+            b"",
+        ] {
+            assert!(!with_coinbase(tag, ELSEWHERE).sv2, "{tag:?}");
+        }
+        assert!(!facts(&block(&[])).sv2, "no coinbase read");
+        // Always written, and only as a boolean: none of the tag's text is in the facts.
+        let json = serde_json::to_value(with_coinbase(real.as_bytes(), ELSEWHERE)).unwrap();
+        assert_eq!(json["sv2"], true);
+        assert!(!json.to_string().contains("Sv2/"), "{json}");
+        let json = serde_json::to_value(facts(&block(&[]))).unwrap();
+        assert_eq!(json["sv2"], false);
     }
 
     #[test]

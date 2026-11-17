@@ -28,6 +28,7 @@ use bitcoin::{Amount, BlockHash, ScriptBuf, Transaction, TxOut};
 use node::rpc::model::BlockTotals;
 
 pub use crate::mempool::SourceError;
+use crate::mining::sv2;
 use crate::projected::Bands;
 use crate::store;
 pub use backfill::{Event, Options, Progress, backfill};
@@ -148,6 +149,7 @@ impl Row {
             fee_rate: r.fee_rate,
             fee_bands: r.fee_bands,
             miner: Miner::of(&self.coinbase),
+            sv2: self.coinbase.is_sv2(),
         })
     }
 }
@@ -172,6 +174,12 @@ impl Coinbase {
                 .map(|o| o.script_pubkey.clone())
                 .collect(),
         }
+    }
+
+    /// Whether the script is laid out as the Stratum V2 reference implementation writes it
+    /// ([`sv2::tag`]): the whole script is kept, so a stored row answers as the block does.
+    pub fn is_sv2(&self) -> bool {
+        sv2::tag(&self.tag).is_some()
     }
 
     /// Each script as one length byte, then its bytes.

@@ -965,6 +965,7 @@ mod tests {
                 fee_rate: None,
                 fee_bands: engine::projected::Bands::default(),
                 miner: engine::blocks::Miner::UNKNOWN,
+                sv2: false,
             },
             txs: vec![0; records].into(),
             ids: Vec::new(),

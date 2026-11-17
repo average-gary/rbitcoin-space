@@ -104,9 +104,24 @@ const FOUNDRY_PAYOUT: &str = "76a9140e6ed2f95e8a7f3131535472e1009a1c77bd01e588ac
 /// Hostile text a miner could write in its coinbase.
 const HOSTILE_TAG: &str = "<img src=x onerror=alert(1)>";
 
+/// Mainnet block 976,280's coinbase script, laid out as Stratum V2's reference implementation
+/// writes it: the height, `Sv2/MARA🇺🇸🇺🇸//`, a 20-byte extranonce.
+const SV2_SCRIPT: &str = "0398e50e1a5376322f4d415241f09f87baf09f87b8f09f87baf09f87b82f2f\
+                          14020000140000000000000000000005cf0007c4fa";
+/// The mock's block whose coinbase script is [`SV2_SCRIPT`].
+const SV2_BLOCK: u32 = 5;
+
 /// The mock's coinbase for `hash`: block 1 is tagged ViaBTC but pays Foundry USA's address,
-/// every other block carries [`HOSTILE_TAG`] and pays an address no pool lists.
+/// block [`SV2_BLOCK`] carries [`SV2_SCRIPT`], and every other block carries [`HOSTILE_TAG`];
+/// those pay an address no pool lists.
 fn coinbase_json(hash: &str) -> (Value, Value) {
+    let unlisted = || format!("0014{}", "ab".repeat(20));
+    if hash == self::hash(SV2_BLOCK) {
+        return (
+            json!([{"coinbase": SV2_SCRIPT, "sequence": 0}]),
+            json!([{"value": 0.0001, "n": 0, "scriptPubKey": {"hex": unlisted()}}]),
+        );
+    }
     let (tag, payout) = if hash == self::hash(1) {
         (
             b"\x03\x00\x35\x0c/ViaBTC/".to_vec(),
@@ -115,7 +130,7 @@ fn coinbase_json(hash: &str) -> (Value, Value) {
     } else {
         let mut tag = b"\x03\x00\x35\x0c".to_vec();
         tag.extend_from_slice(HOSTILE_TAG.as_bytes());
-        (tag, format!("0014{}", "ab".repeat(20)))
+        (tag, unlisted())
     };
     let hex: String = tag.iter().map(|b| format!("{b:02x}")).collect();
     (
@@ -367,6 +382,7 @@ async fn facts_records_and_batches_are_served_and_cached() {
     assert_eq!(bands, 9_900);
     // Tagged ViaBTC, paid to Foundry USA's address: the tag decides, by the list's name.
     assert_eq!(f["miner"], json!({"name": "ViaBTC", "slug": "viabtc"}));
+    assert_eq!(f["sv2"], false, "an ordinary coinbase");
     let e = request_event(&r).await;
     assert_eq!(
         (e["endpoint"].as_str(), e["source"].as_str()),
@@ -424,6 +440,32 @@ async fn facts_records_and_batches_are_served_and_cached() {
     let body = String::from_utf8_lossy(&r.body);
     assert!(
         !body.contains("onerror") && !body.contains("/ViaBTC/"),
+        "{body}"
+    );
+
+    // A coinbase laid out as Stratum V2 writes it is marked, alone and in a batch, and the mark
+    // is a boolean: the tag's words stay out of the facts.
+    let c = hash(SV2_BLOCK);
+    let r = get(&addr, &summary(&c), "192.0.2.1").await;
+    assert_eq!(r.status, 200, "{r:?}");
+    let f = r.json();
+    assert_eq!(f["sv2"], true);
+    assert_eq!(f["miner"], json!({"name": "MARA Pool", "slug": "marapool"}));
+    let r = get(
+        &addr,
+        &format!("/regtest/app/blocks/summary?hashes={c},{b}"),
+        "192.0.2.1",
+    )
+    .await;
+    assert_eq!(r.status, 200, "{r:?}");
+    let all = r.json();
+    assert_eq!(
+        (&all[0]["sv2"], &all[1]["sv2"]),
+        (&json!(true), &json!(false))
+    );
+    let body = String::from_utf8_lossy(&r.body);
+    assert!(
+        !body.contains("Sv2") && !body.contains("MARA\u{1f1fa}"),
         "{body}"
     );
 
@@ -532,6 +574,36 @@ async fn a_block_in_the_table_is_answered_without_the_node() {
     )
     .await;
     assert_eq!(request_event(&r).await["source"], "stored");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The Stratum V2 mark needs no column of its own: the row's stored tag is the whole script.
+#[tokio::test]
+async fn a_stored_stratum_v2_block_is_marked_without_the_node() {
+    let c = hash(SV2_BLOCK);
+    let (addr, _) = start(Duration::ZERO, 100).await;
+    let computed = get(&addr, &summary(&c), "192.0.2.1").await;
+    assert_eq!(computed.status, 200);
+
+    let dir = std::env::temp_dir().join(format!("rbitcoin-space-sv2-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    store_row(&dir, &c).await;
+    let (addr, node) = start_with(
+        Duration::ZERO,
+        100,
+        &[
+            ("DATA_DIR", dir.display().to_string()),
+            ("BACKFILL_ENABLED", "false".to_owned()),
+        ],
+    )
+    .await;
+    let r = get(&addr, &summary(&c), "192.0.2.1").await;
+    assert_eq!(r.status, 200, "{r:?}");
+    assert_eq!(r.body, computed.body, "the same answer, byte for byte");
+    assert_eq!(r.json()["sv2"], true, "from the stored coinbase");
+    assert_eq!(r.json()["miner"]["slug"], "marapool");
+    assert_eq!(request_event(&r).await["source"], "stored");
+    assert_eq!(node.total(), 0, "no node call");
     let _ = std::fs::remove_dir_all(&dir);
 }
 

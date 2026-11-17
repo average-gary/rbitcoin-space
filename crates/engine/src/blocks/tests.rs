@@ -103,6 +103,7 @@ fn mock_facts(height: u32, hash: BlockHash) -> Facts {
         }),
         fee_bands: crate::projected::Bands::new([u64::from(height); 12]),
         miner: Miner::UNKNOWN,
+        sv2: false,
     }
 }
 
@@ -333,7 +334,19 @@ fn a_rated_row_gives_the_facts_the_route_serves() {
     assert_eq!(row.facts(), Some(want));
     // The miner comes from the stored coinbase: a listed tag names its pool.
     row.coinbase.tag = b"\x03\x01\x02\x03/ViaBTC/".to_vec();
-    assert_eq!(row.facts().unwrap().miner.slug, "viabtc");
+    let named = row.facts().unwrap();
+    assert_eq!(named.miner.slug, "viabtc");
+    assert!(!named.sv2);
+    // So does the Stratum V2 mark: the stored tag is the whole script (mainnet 976,280's).
+    row.coinbase.tag = ScriptBuf::from_hex(
+        "0398e50e1a5376322f4d415241f09f87baf09f87b8f09f87baf09f87b82f2f\
+         14020000140000000000000000000005cf0007c4fa",
+    )
+    .unwrap()
+    .into_bytes();
+    let marked = row.facts().unwrap();
+    assert!(marked.sv2);
+    assert_eq!(marked.miner.slug, "marapool");
 }
 
 // Reading.
