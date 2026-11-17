@@ -333,7 +333,7 @@ describe("BlockPage", () => {
     expect(text(mark?.querySelector(".block-sv2") as Element)).toBe("Sv2");
     const described = document.getElementById(mark?.getAttribute("aria-describedby") ?? "");
     expect(described?.textContent).toBe(
-      "Mined over Stratum V2. The coinbase is laid out as the Stratum V2 reference implementation " +
+      "Stratum V2 coinbase tag. The coinbase is laid out as the Stratum V2 reference implementation " +
         "writes it, Sv2/<pool tag>/<miner tag>/. That is what the block's builder wrote, not " +
         "something the chain proves.",
     );
@@ -344,7 +344,9 @@ describe("BlockPage", () => {
     expect(document.querySelector("body > .note")).toBeNull();
     mark?.focus();
     flush();
-    expect(document.querySelector("body > .note")?.textContent).toContain("Mined over Stratum V2");
+    expect(document.querySelector("body > .note")?.textContent).toContain(
+      "Stratum V2 coinbase tag",
+    );
   });
 
   it("marks an Unknown miner's Stratum V2 block too", async () => {

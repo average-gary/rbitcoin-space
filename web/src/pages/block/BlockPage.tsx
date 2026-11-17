@@ -534,7 +534,7 @@ function BlockView(props: { hash?: string | undefined; height?: number | undefin
                               <Show when={sum()?.sv2 === true}>
                                 <Note
                                   focusable
-                                  title="Mined over Stratum V2"
+                                  title="Stratum V2 coinbase tag"
                                   figure={<span class="block-sv2 tap">Sv2</span>}
                                 >
                                   {SV2_NOTE}

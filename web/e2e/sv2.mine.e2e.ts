@@ -56,7 +56,7 @@ test("a Stratum V2 block is its pool field's pool, never its miner field's, and 
   // The mark, and what it rests on: said to a screen reader, and shown on focus.
   const mark = named.getByRole("button", { name: "Sv2" });
   const note =
-    /^Mined over Stratum V2\. The coinbase is laid out as .* not something the chain proves\.$/;
+    /^Stratum V2 coinbase tag\. The coinbase is laid out as .* not something the chain proves\.$/;
   await expect(mark).toHaveAccessibleDescription(note);
   const shown = page.getByText("Sv2/<pool tag>/<miner tag>/").filter({ visible: true });
   await expect(shown).toHaveCount(1);
