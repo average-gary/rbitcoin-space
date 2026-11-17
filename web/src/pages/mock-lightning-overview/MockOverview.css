@@ -1,0 +1,452 @@
+@layer pages {
+  .lnx {
+    display: grid;
+    gap: var(--space-4);
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-8);
+  }
+  .lnx > *,
+  .lnx-row > * {
+    min-width: 0;
+  }
+
+  /* The title, its moment and the period on one line where they fit. */
+  .lnx .ln-nav {
+    margin-bottom: 0;
+  }
+  .lnx-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+  }
+  .lnx-head h1 {
+    margin: 0;
+  }
+  .lnx-asof {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .lnx-head__periods {
+    margin-inline-start: auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* The figures: six wells in a row, each a button that charts its figure. */
+  .lnx-figs {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .lnx-fig {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    min-width: 0;
+    padding: var(--space-3) var(--space-3) var(--space-2);
+    border: 0;
+    border-radius: var(--radius-m);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: box-shadow var(--dur-quick) var(--ease-out);
+  }
+  @media (hover: hover) {
+    .lnx-fig:hover {
+      box-shadow: inset 0 0 0 1px var(--color-line-strong);
+    }
+  }
+  .lnx-fig[aria-pressed="true"] {
+    background: var(--color-surface);
+    box-shadow:
+      inset 0 0 0 1px var(--color-line-strong),
+      inset 0 -3px 0 var(--color-accent);
+  }
+  .lnx-fig__label {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .lnx-fig__value {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    white-space: nowrap;
+  }
+  .lnx-fig__value .unit {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-regular);
+    color: var(--color-text-muted);
+  }
+  .lnx-fig__change {
+    min-height: 1lh;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .lnx-spark {
+    position: relative;
+    display: block;
+    height: 28px;
+    margin-top: var(--space-1);
+  }
+  .lnx-spark svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .lnx-spark__none {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-radius: var(--radius-s);
+    background: repeating-linear-gradient(-45deg, transparent 0 3px, var(--color-line) 3px 4px);
+  }
+  .lnx-spark path {
+    fill: none;
+    stroke: var(--series-1);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* How nodes can be reached: one share bar, its key beside it. */
+  .lnx-reach {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+  }
+  .lnx-reach__label {
+    color: var(--color-text-muted);
+  }
+  .lnx-reach__bar {
+    display: flex;
+    flex: 1 1 10rem;
+    gap: 2px;
+    height: 10px;
+    overflow: hidden;
+    border-radius: var(--radius-s);
+  }
+  .lnx-reach__key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lnx-reach__key li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    white-space: nowrap;
+  }
+  .lnx-reach__sw {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: var(--radius-s);
+  }
+  .lnx-reach--clear {
+    background: var(--series-1);
+  }
+  .lnx-reach--both {
+    background: color-mix(in srgb, var(--series-1) 50%, var(--series-2));
+  }
+  .lnx-reach--tor {
+    background: var(--series-2);
+  }
+  .lnx-reach--none {
+    background: color-mix(in srgb, var(--color-text-muted) 45%, var(--color-surface));
+  }
+  .lnx-now .more {
+    margin-top: var(--space-2);
+  }
+
+  /* Rows of panels that belong together, side by side on a wide screen. */
+  .lnx-row {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .lnx-row--chart {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+  .lnx-row--feed {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+  .lnx-chart {
+    min-height: calc(220px + 4.5rem);
+  }
+  .lnx-aside {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  /* Closes by kind. */
+  .lnx-bars__readout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    min-height: 2lh;
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-sm);
+    align-content: flex-start;
+  }
+  .lnx-bars__key {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    white-space: nowrap;
+  }
+  .lnx-bars__sw {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: var(--radius-s);
+    background: var(--sw);
+  }
+  .lnx-bars {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-2);
+    height: 150px;
+  }
+  .lnx-bars__axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-align: right;
+  }
+  .lnx-bars__plot {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    border-bottom: 1px solid var(--color-line-strong);
+  }
+  .lnx-bars__day {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column-reverse;
+    gap: 1px;
+    min-width: 0;
+  }
+  .lnx-bars__day--at {
+    background: var(--color-accent-soft);
+  }
+  .lnx-bars__day--unknown {
+    background: repeating-linear-gradient(-45deg, transparent 0 3px, var(--color-line) 3px 4px);
+  }
+  .lnx-bars__seg {
+    flex: none;
+    height: calc(var(--h) * 100%);
+    min-height: 2px;
+    background: var(--sw);
+  }
+  .lnx-bars__ends {
+    display: flex;
+    justify-content: space-between;
+    margin: var(--space-1) 0 0;
+    padding-inline-start: 2rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  /* The feed fills the height the movers set beside it, and scrolls inside. */
+  .lnx-feed {
+    display: flex;
+    flex-direction: column;
+    container-type: inline-size;
+  }
+  .lnx-feed .ln-picker {
+    margin-bottom: var(--space-3);
+  }
+  .lnx-feed__list {
+    /* Holds its rows' hidden words too, which would otherwise lengthen the page. */
+    position: relative;
+    flex: 1 1 0;
+    min-height: 18rem;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+    font-size: var(--text-sm);
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+  }
+  .lnx-ev {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      "kind ends fig"
+      "id ends time";
+    align-items: start;
+    gap: 0 var(--space-4);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .lnx-ev > * {
+    min-width: 0;
+  }
+  .lnx-ev__kind {
+    grid-area: kind;
+  }
+  .lnx-ev__id {
+    grid-area: id;
+    white-space: nowrap;
+  }
+  .lnx-ev__fig {
+    grid-area: fig;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .lnx-ev__time {
+    grid-area: time;
+    text-align: right;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .lnx-ev__ends {
+    grid-area: ends;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-2);
+  }
+  .lnx-ev__join,
+  .lnx-muted {
+    color: var(--color-text-muted);
+  }
+  .lnx-moved {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0 var(--space-1);
+  }
+  @container (max-width: 34em) {
+    /* The kind and the id keep their width; a long fee change wraps between its figures. */
+    .lnx-ev {
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-areas:
+        "kind time"
+        "id fig"
+        "ends ends";
+      row-gap: var(--space-1);
+    }
+  }
+
+  .lnx-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+  @media (pointer: coarse) {
+    :is(.lnx-controls, .lnx-feed) .ln-picker__item {
+      min-height: var(--touch);
+    }
+  }
+
+  /* Four short lists side by side. */
+  .lnx-lists {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .lnx-lists__pick {
+    display: none;
+  }
+
+  @media (max-width: 80em) {
+    .lnx-figs {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .lnx-lists {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 65em) {
+    .lnx-row--chart,
+    .lnx-row--feed {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .lnx-feed__list {
+      flex: none;
+      height: min(26rem, 65svh);
+    }
+  }
+  @media (max-width: 40em) {
+    .lnx {
+      gap: var(--space-3);
+      padding-top: var(--space-3);
+    }
+    .lnx-figs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .lnx-fig {
+      padding: var(--space-2) var(--space-3);
+    }
+    .lnx-spark {
+      height: 20px;
+    }
+    .lnx-lists {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-2);
+    }
+    .lnx-lists__pick {
+      display: block;
+    }
+    .lnx-lists__pick .ln-picker__item {
+      min-height: var(--touch);
+    }
+    .lnx-lists__pick ul {
+      flex-wrap: nowrap;
+    }
+    .lnx-lists__pick li {
+      flex: 1 1 0;
+    }
+    .lnx-lists__pick .ln-picker__item {
+      width: 100%;
+      padding-inline: var(--space-1);
+    }
+    .lnx-lists[data-show="cap"] > section:not([data-list="cap"]),
+    .lnx-lists[data-show="ch"] > section:not([data-list="ch"]),
+    .lnx-lists[data-show="new"] > section:not([data-list="new"]),
+    .lnx-lists[data-show="left"] > section:not([data-list="left"]) {
+      display: none;
+    }
+    /* The title and the period share the first line; the moment goes under them. */
+    .lnx-asof {
+      order: 3;
+      flex-basis: 100%;
+    }
+  }
+}
+
+@layer pages {
+  /* As the live feed: a channel's id reaches a thumb high, and a row's lines stand apart for it. */
+  @media (pointer: coarse) {
+    .lnx-ev__id .ln-id {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      padding-block: calc((var(--touch) - 1lh) / 2);
+      margin-block: calc((var(--touch) - 1lh) / -2);
+    }
+    .lnx-ev {
+      row-gap: var(--space-3);
+      padding-block: var(--space-3);
+    }
+    .lnx-ev__ends {
+      row-gap: var(--space-3);
+    }
+  }
+}

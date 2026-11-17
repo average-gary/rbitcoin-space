@@ -1,0 +1,650 @@
+{
+  "before": {
+    "1m": null,
+    "1w": null,
+    "24h": {
+      "capacity": 324136666315,
+      "channels": 36246,
+      "med_base_fee_msat": 500,
+      "med_fee_rate": 133,
+      "nodes": 13617,
+      "time": 1794789600
+    }
+  },
+  "closed": [
+    {
+      "capacity": 50000000,
+      "closed": {
+        "block": {
+          "hash": "000000000000000000020f23f305a39cb668ea7740ffb7fc2c81b6549f5c3123",
+          "height": 976199,
+          "time": 1794874453
+        },
+        "fee": 1422,
+        "kind": "cooperative",
+        "txid": "74a3eef11869ffdad65361253b207c83182e1b64ad80e0f2469f82cb8ae87e34"
+      },
+      "id": "976180x2864x1",
+      "node_one": {
+        "alias": "",
+        "id": "024570df1d3cbf8a08537515b980d09937f5c9088fcd9af3e7522aa639f20d9167"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "opened": {
+        "hash": "0000000000000000000184b8fe67b026e0d01bc1b75a495f10e5c8e6ce0170be",
+        "height": 976180,
+        "time": 1794859026
+      },
+      "penalty": null,
+      "scid": "1073321260990070785"
+    },
+    {
+      "capacity": 50000000,
+      "closed": {
+        "block": {
+          "hash": "000000000000000000020f23f305a39cb668ea7740ffb7fc2c81b6549f5c3123",
+          "height": 976199,
+          "time": 1794874453
+        },
+        "fee": 1422,
+        "kind": "cooperative",
+        "txid": "af089055a5ed7fb6c2fe296ac4d95927964ee531809719b352b73f583411f0a9"
+      },
+      "id": "976066x1689x1",
+      "node_one": {
+        "alias": "",
+        "id": "024729f3d5f7794f4df09bfdb7ca23a4fbe6c38997cdd213c694a2cca1c27cbb17"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "opened": {
+        "hash": "00000000000000000000cfa2f73f29fa61a068235929da1e9f91cbc8d0a2fcbf",
+        "height": 976066,
+        "time": 1794801560
+      },
+      "penalty": null,
+      "scid": "1073195916587499521"
+    },
+    {
+      "capacity": 120000000,
+      "closed": {
+        "block": {
+          "hash": "000000000000000000020f23f305a39cb668ea7740ffb7fc2c81b6549f5c3123",
+          "height": 976199,
+          "time": 1794874453
+        },
+        "fee": 196,
+        "kind": "cooperative",
+        "txid": "175ec0623d1450c9283baedd11b93caa1adf5e90995fc684afb2b9207e4161ca"
+      },
+      "id": "975914x794x1",
+      "node_one": {
+        "alias": "1sats.com⚡️lsp.flashsats.xyz",
+        "id": "02e4971e61a3f55718ae31e2eed19aaf2e32caf3eb5ef5ff03e01aa3ada8907e78"
+      },
+      "node_two": {
+        "alias": "fixedfloat.com",
+        "id": "037f990e61acee8a7697966afd29dd88f3b1f8a7b14d625c4f8742bd952003a590"
+      },
+      "opened": {
+        "hash": "000000000000000000009482525de0286c12c75605118aaa9d51ec24a1b96465",
+        "height": 975914,
+        "time": 1794724842
+      },
+      "penalty": null,
+      "scid": "1073028790761422849"
+    },
+    {
+      "capacity": 14000000,
+      "closed": {
+        "block": {
+          "hash": "000000000000000000020f23f305a39cb668ea7740ffb7fc2c81b6549f5c3123",
+          "height": 976199,
+          "time": 1794874453
+        },
+        "fee": 196,
+        "kind": "cooperative",
+        "txid": "67bd1bdd02b3dbef2baabe963547588204554d4d4f1c948058a50fdedefbded2"
+      },
+      "id": "960647x4976x0",
+      "node_one": {
+        "alias": "LNServer_Wave",
+        "id": "02b4552a7a85274e4da01a7c71ca57407181752e8568b31d51f13c111a2941dce3"
+      },
+      "node_two": {
+        "alias": "River Financial 1",
+        "id": "03037dc08e9ac63b82581f79b662a4d0ceca8a8ca162b1af3551595b8f2d97b70a"
+      },
+      "opened": {
+        "hash": "000000000000000000006c9228b8a7212964e23c6279c8e8c3efc553c14c79f2",
+        "height": 960647,
+        "time": 1785630345
+      },
+      "penalty": null,
+      "scid": "1056242547014238208"
+    },
+    {
+      "capacity": 3000000,
+      "closed": {
+        "block": {
+          "hash": "000000000000000000020f23f305a39cb668ea7740ffb7fc2c81b6549f5c3123",
+          "height": 976199,
+          "time": 1794874453
+        },
+        "fee": 196,
+        "kind": "cooperative",
+        "txid": "fb4fb6e87cba4b195555e4e88ea8cb5f7ebf0416aa5bed5ddba2cd46d70cf33e"
+      },
+      "id": "960456x1178x1",
+      "node_one": {
+        "alias": "DarkStarLightning",
+        "id": "02cc5860bfde06617f8b9818b444f90eff00fe1859c1ae75826a60ca5ebb313804"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "0342db9a6ef15e7e4feda8f3cd7c2512038cd8dde422bf7573b8f00b1bb73b2c43"
+      },
+      "opened": {
+        "hash": "00000000000000000000c3eec53b82acc5b9bc72e43dce680b91edce262a41b2",
+        "height": 960456,
+        "time": 1785527637
+      },
+      "penalty": null,
+      "scid": "1056032540044427265"
+    },
+    {
+      "capacity": 100000,
+      "closed": {
+        "block": {
+          "hash": "000000000000000000020f23f305a39cb668ea7740ffb7fc2c81b6549f5c3123",
+          "height": 976199,
+          "time": 1794874453
+        },
+        "fee": 151,
+        "kind": "cooperative",
+        "txid": "0ab1204a433b7816a9dc356be62c8f98bdb8eac2c336eca20899955e26b3ed05"
+      },
+      "id": "899551x1567x1",
+      "node_one": {
+        "alias": null,
+        "id": "02ccda955ba8e3d262bbf404924a382df7bf747d1740019263e10fbefef884b532"
+      },
+      "node_two": {
+        "alias": "bxm",
+        "id": "0335dc0160c4995be2a6e4abad424ebb1db656c492f36145e8ff26604efbf0a5f7"
+      },
+      "opened": {
+        "hash": "00000000000000000001d4843485c1233bfdff12036b52a11d00708f64c2a2e1",
+        "height": 899551,
+        "time": 1748901104
+      },
+      "penalty": null,
+      "scid": "989066784380223489"
+    },
+    {
+      "capacity": 1000000,
+      "closed": {
+        "block": {
+          "hash": "00000000000000000000f73122aaca9c9c4261d4323e03cc2481af28a4a9e335",
+          "height": 976198,
+          "time": 1794873995
+        },
+        "fee": 388,
+        "kind": "force",
+        "txid": "0ee2d3ff6dbeb984948e239d5c5292d5e5e424e227164b8488f5ae77f23eed8a"
+      },
+      "id": "949666x2372x0",
+      "node_one": {
+        "alias": "Megalithic.me",
+        "id": "0322d0e43b3d92d30ed187f4e101a9a9605c3ee5fc9721e6dac3ce3d7732fbb13e"
+      },
+      "node_two": {
+        "alias": "Megalith LSP 2",
+        "id": "034066e29e402d9cf55af1ae1026cc5adf92eed1e0e421785442f53717ad1453b0"
+      },
+      "opened": {
+        "hash": "000000000000000000004f47264def0a28f39f7ad791fbb69544d9432a43bb27",
+        "height": 949666,
+        "time": 1778940209
+      },
+      "penalty": null,
+      "scid": "1044168809658974208"
+    },
+    {
+      "capacity": 50000000,
+      "closed": {
+        "block": {
+          "hash": "00000000000000000000ac48750a9a33066d9861f75e463ec63c52be8778dc8c",
+          "height": 976197,
+          "time": 1794873329
+        },
+        "fee": 1422,
+        "kind": "cooperative",
+        "txid": "2d58b7dab06b5af5b27544bf6dadc1726be251eb21cfa5b803e481ab77ff145d"
+      },
+      "id": "976005x590x0",
+      "node_one": {
+        "alias": "",
+        "id": "024570df1d3cbf8a08537515b980d09937f5c9088fcd9af3e7522aa639f20d9167"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "opened": {
+        "hash": "00000000000000000001dbab69e8c606e8d057b3862e73201c95d8426c06ae2c",
+        "height": 976005,
+        "time": 1794769659
+      },
+      "penalty": null,
+      "scid": "1073128846306181120"
+    },
+    {
+      "capacity": 1483360,
+      "closed": {
+        "block": {
+          "hash": "0000000000000000000100ec77777a433d99833668947cf63a3edfa46f2d083b",
+          "height": 976195,
+          "time": 1794870685
+        },
+        "fee": 196,
+        "kind": "cooperative",
+        "txid": "f08c101fe794ad9d6cf13b0760b31e59aa9baf83eec672bd3589ec1329ed7cc5"
+      },
+      "id": "967464x753x1",
+      "node_one": {
+        "alias": "BitGo Routing Node",
+        "id": "02757afbc23eafd8c8ffb02fbf92c8ee6bcceb29fbff4d12087f8191a49dc57ef4"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "027c507d9243a9f3b0d62ee675fe5b032eec8570165cd9fd27070914598949ed90"
+      },
+      "opened": {
+        "hash": "000000000000000000002df81aca0d942605ff584cd709e47dcdadb5605b05d4",
+        "height": 967464,
+        "time": 1789676540
+      },
+      "penalty": null,
+      "scid": "1063737917504028673"
+    },
+    {
+      "capacity": 5000000,
+      "closed": {
+        "block": {
+          "hash": "0000000000000000000100ec77777a433d99833668947cf63a3edfa46f2d083b",
+          "height": 976195,
+          "time": 1794870685
+        },
+        "fee": 285,
+        "kind": "force",
+        "txid": "3e8dfa22b81a2be9dd08c6f2f7071dae83c3e5abbc19b8471493098d425eb01e"
+      },
+      "id": "966235x1407x1",
+      "node_one": {
+        "alias": "LNBiG [Hub-2]",
+        "id": "033e9ce4e8f0e68f7db49ffb6b9eecc10605f3f3fcb3c630545887749ab515b9c7"
+      },
+      "node_two": {
+        "alias": "Antistate",
+        "id": "03905aed59919f322abcc107c3cb6767bc7d40ed175a9d143706fc211cad188157"
+      },
+      "opened": {
+        "hash": "000000000000000000013e6f351faa1666b009626a243d7303258d957a4fda35",
+        "height": 966235,
+        "time": 1788971588
+      },
+      "penalty": null,
+      "scid": "1062386617756352513"
+    }
+  ],
+  "opened": [
+    {
+      "capacity": 500000,
+      "closed": null,
+      "id": "976195x2287x1",
+      "node_one": {
+        "alias": "1ML.com node ALPHA",
+        "id": "0217890e3aad8d35bc054f43acc00084b25229ecff0ab68debd82883ad65ee8266"
+      },
+      "node_two": {
+        "alias": "Old Lake Lightning",
+        "id": "033b73a599410c1a6fb431628a9a75024d7652b919c1e603673a00982dc704e2ec"
+      },
+      "opened": {
+        "hash": "0000000000000000000100ec77777a433d99833668947cf63a3edfa46f2d083b",
+        "height": 976195,
+        "time": 1794870685
+      },
+      "penalty": null,
+      "scid": "1073337753626673153"
+    },
+    {
+      "capacity": 5000000,
+      "closed": null,
+      "id": "976195x2282x1",
+      "node_one": {
+        "alias": "Kraken 🐙⚡",
+        "id": "02437c00ef5de2686a6bd60f8acb5c83d17010916010a15f479d5ef84c04f04485"
+      },
+      "node_two": {
+        "alias": "LukuRutu",
+        "id": "0368cf316080d8eb0f17a8a890e8c98eecad633cc45bc6138597b816a84c602df1"
+      },
+      "opened": {
+        "hash": "0000000000000000000100ec77777a433d99833668947cf63a3edfa46f2d083b",
+        "height": 976195,
+        "time": 1794870685
+      },
+      "penalty": null,
+      "scid": "1073337753626345473"
+    },
+    {
+      "capacity": 50000000,
+      "closed": null,
+      "id": "976194x2867x1",
+      "node_one": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "node_two": {
+        "alias": "OpenNode.com 1",
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "opened": {
+        "hash": "00000000000000000001a7729511fa1d41d945a1aeeaa6ab00859cde771493e5",
+        "height": 976194,
+        "time": 1794870688
+      },
+      "penalty": null,
+      "scid": "1073336654153056257"
+    },
+    {
+      "capacity": 50000000,
+      "closed": null,
+      "id": "976194x2671x1",
+      "node_one": {
+        "alias": "",
+        "id": "024729f3d5f7794f4df09bfdb7ca23a4fbe6c38997cdd213c694a2cca1c27cbb17"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "opened": {
+        "hash": "00000000000000000001a7729511fa1d41d945a1aeeaa6ab00859cde771493e5",
+        "height": 976194,
+        "time": 1794870688
+      },
+      "penalty": null,
+      "scid": "1073336654140211201"
+    },
+    {
+      "capacity": 50000000,
+      "closed": null,
+      "id": "976194x2665x0",
+      "node_one": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "node_two": {
+        "alias": "",
+        "id": "031fab3f6a8ae8588668fbe4bf4cae14c3aaa4134330b1798b81e60aaf9662ff20"
+      },
+      "opened": {
+        "hash": "00000000000000000001a7729511fa1d41d945a1aeeaa6ab00859cde771493e5",
+        "height": 976194,
+        "time": 1794870688
+      },
+      "penalty": null,
+      "scid": "1073336654139817984"
+    },
+    {
+      "capacity": 25635086,
+      "closed": null,
+      "id": "976193x1291x0",
+      "node_one": {
+        "alias": "LOOP",
+        "id": "021c97a90a411ff2b10dc2a8e32de2f29d2fa49d41bfbb52bd416e460db0747d0d"
+      },
+      "node_two": {
+        "alias": "Bee Tee See",
+        "id": "028803c6dd88596c7cf92566a641f7fb62cc848f525ab0bd5d72b6856fc71a44a9"
+      },
+      "opened": {
+        "hash": "00000000000000000001d2ab932f3118d4d4cc110699a85ad25912c4f5be791c",
+        "height": 976193,
+        "time": 1794868387
+      },
+      "penalty": null,
+      "scid": "1073335554538143744"
+    },
+    {
+      "capacity": 50000000,
+      "closed": null,
+      "id": "976192x1852x0",
+      "node_one": {
+        "alias": "lndus0.zaphq.io",
+        "id": "027cd974e47086291bb8a5b0160a889c738f2712a703b8ea939985fd16f3aae67e"
+      },
+      "node_two": {
+        "alias": "",
+        "id": "02e1221434a21b8ce5818e92c6ec76301824dc87ed94b4628242e4b1f4a6ff445f"
+      },
+      "opened": {
+        "hash": "00000000000000000000b3be54432245cb68dd804ed47d828e3cd37ed02e05ff",
+        "height": 976192,
+        "time": 1794868127
+      },
+      "penalty": null,
+      "scid": "1073334455063281664"
+    },
+    {
+      "capacity": 50000000,
+      "closed": null,
+      "id": "976192x1850x1",
+      "node_one": {
+        "alias": "",
+        "id": "024570df1d3cbf8a08537515b980d09937f5c9088fcd9af3e7522aa639f20d9167"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "opened": {
+        "hash": "00000000000000000000b3be54432245cb68dd804ed47d828e3cd37ed02e05ff",
+        "height": 976192,
+        "time": 1794868127
+      },
+      "penalty": null,
+      "scid": "1073334455063150593"
+    },
+    {
+      "capacity": 291867674,
+      "closed": null,
+      "id": "976191x575x1",
+      "node_one": {
+        "alias": "lndus0.zaphq.io",
+        "id": "027cd974e47086291bb8a5b0160a889c738f2712a703b8ea939985fd16f3aae67e"
+      },
+      "node_two": {
+        "alias": "Strike",
+        "id": "03c8e5f583585cac1de2b7503a6ccd3c12ba477cfd139cd4905be504c2f48e86bd"
+      },
+      "opened": {
+        "hash": "00000000000000000001d142d9ed8eeb4e829670655682ba9c6849ea47ce9de0",
+        "height": 976191,
+        "time": 1794867230
+      },
+      "penalty": null,
+      "scid": "1073333355467964417"
+    },
+    {
+      "capacity": 50000000,
+      "closed": null,
+      "id": "976190x2121x1",
+      "node_one": {
+        "alias": "",
+        "id": "02e1221434a21b8ce5818e92c6ec76301824dc87ed94b4628242e4b1f4a6ff445f"
+      },
+      "node_two": {
+        "alias": "OpenNode.com 1",
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "opened": {
+        "hash": "000000000000000000008ecd3737d56da866c155052fe9f84290dc592525d125",
+        "height": 976190,
+        "time": 1794866908
+      },
+      "penalty": null,
+      "scid": "1073332256057655297"
+    }
+  ],
+  "statistics": {
+    "avg_base_fee_msat": 1565,
+    "avg_capacity": 8770434,
+    "avg_fee_rate": 1052,
+    "capacity": 317217809591,
+    "channels": 36169,
+    "clearnet_nodes": 1378,
+    "clearnet_tor_nodes": 1085,
+    "med_base_fee_msat": 500,
+    "med_capacity": 1000000,
+    "med_fee_rate": 130,
+    "nodes": 13612,
+    "policies": 47677,
+    "samples": 1,
+    "time": 1794875400,
+    "tor_nodes": 4553,
+    "unannounced_nodes": 6596
+  },
+  "top_capacity": [
+    {
+      "alias": "bfx-lnd0",
+      "capacity": 32211496606,
+      "channels": 539,
+      "id": "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025"
+    },
+    {
+      "alias": "ACINQ",
+      "capacity": 28271790321,
+      "channels": 1808,
+      "id": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f"
+    },
+    {
+      "alias": "Binance",
+      "capacity": 27884500000,
+      "channels": 115,
+      "id": "03a1f3afd646d77bdaf545cceaf079bab6057eae52c6319b63b5803d0989d6a72f"
+    },
+    {
+      "alias": "block-iad-1",
+      "capacity": 23590680064,
+      "channels": 515,
+      "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+    },
+    {
+      "alias": "bfx-lnd1",
+      "capacity": 20934316655,
+      "channels": 473,
+      "id": "03cde60a6323f7122d5178255766e38114b4722ede08f7c9e0c5df9b912cc201d6"
+    },
+    {
+      "alias": "okx",
+      "capacity": 16275743043,
+      "channels": 385,
+      "id": "0294ac3e099def03c12a37e30fe5364b1223fd60069869142ef96580c8439c2e0a"
+    },
+    {
+      "alias": "fixedfloat.com",
+      "capacity": 16140429421,
+      "channels": 149,
+      "id": "037f990e61acee8a7697966afd29dd88f3b1f8a7b14d625c4f8742bd952003a590"
+    },
+    {
+      "alias": "LNBiG [Hub-2]",
+      "capacity": 15964797481,
+      "channels": 406,
+      "id": "033e9ce4e8f0e68f7db49ffb6b9eecc10605f3f3fcb3c630545887749ab515b9c7"
+    },
+    {
+      "alias": "Strike",
+      "capacity": 14080809804,
+      "channels": 323,
+      "id": "03c8e5f583585cac1de2b7503a6ccd3c12ba477cfd139cd4905be504c2f48e86bd"
+    },
+    {
+      "alias": "Kraken 🐙⚡",
+      "capacity": 14039341897,
+      "channels": 452,
+      "id": "02437c00ef5de2686a6bd60f8acb5c83d17010916010a15f479d5ef84c04f04485"
+    }
+  ],
+  "top_channels": [
+    {
+      "alias": "ACINQ",
+      "capacity": 28271790321,
+      "channels": 1808,
+      "id": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f"
+    },
+    {
+      "alias": "1ML.com node ALPHA",
+      "capacity": 684279777,
+      "channels": 1630,
+      "id": "0217890e3aad8d35bc054f43acc00084b25229ecff0ab68debd82883ad65ee8266"
+    },
+    {
+      "alias": "CoinGate",
+      "capacity": 1769918558,
+      "channels": 1301,
+      "id": "0242a4ae0c5bef18048fbecf995094b74bfb0f7391418d71ed394784373f41e4f3"
+    },
+    {
+      "alias": "bfx-lnd0",
+      "capacity": 32211496606,
+      "channels": 539,
+      "id": "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025"
+    },
+    {
+      "alias": "block-iad-1",
+      "capacity": 23590680064,
+      "channels": 515,
+      "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+    },
+    {
+      "alias": "bfx-lnd1",
+      "capacity": 20934316655,
+      "channels": 473,
+      "id": "03cde60a6323f7122d5178255766e38114b4722ede08f7c9e0c5df9b912cc201d6"
+    },
+    {
+      "alias": "Kraken 🐙⚡",
+      "capacity": 14039341897,
+      "channels": 452,
+      "id": "02437c00ef5de2686a6bd60f8acb5c83d17010916010a15f479d5ef84c04f04485"
+    },
+    {
+      "alias": "gameb_1",
+      "capacity": 292809225,
+      "channels": 418,
+      "id": "023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f"
+    },
+    {
+      "alias": "BCash_Is_Trash",
+      "capacity": 4289582624,
+      "channels": 416,
+      "id": "0298f6074a454a1f5345cb2a7c6f9fce206cd0bf675d177cdbf0ca7508dd28852f"
+    },
+    {
+      "alias": "LNBiG [Hub-1]",
+      "capacity": 10761804143,
+      "channels": 414,
+      "id": "034ea80f8b148c750463546bd999bf7321a0e6dfc60aaf84bd0400a2e8d376c0d5"
+    }
+  ]
+}

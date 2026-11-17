@@ -1,0 +1,78 @@
+{
+  "days": [
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1792368000 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1792454400 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1792540800 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1792627200 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1792713600 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1792800000 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1792886400 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1792972800 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793059200 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793145600 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793232000 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793318400 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793404800 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793491200 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793577600 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793664000 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793750400 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793836800 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1793923200 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1794009600 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1794096000 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1794182400 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1794268800 },
+    { "capacity": 0, "cooperative": 0, "force": 0, "other": 0, "penalty": 0, "time": 1794355200 },
+    {
+      "capacity": 5820901605,
+      "cooperative": 114,
+      "force": 8,
+      "other": 0,
+      "penalty": 0,
+      "time": 1794441600
+    },
+    {
+      "capacity": 6358485391,
+      "cooperative": 144,
+      "force": 31,
+      "other": 0,
+      "penalty": 0,
+      "time": 1794528000
+    },
+    {
+      "capacity": 9870926218,
+      "cooperative": 183,
+      "force": 13,
+      "other": 0,
+      "penalty": 0,
+      "time": 1794614400
+    },
+    {
+      "capacity": 8142338152,
+      "cooperative": 204,
+      "force": 23,
+      "other": 1,
+      "penalty": 0,
+      "time": 1794700800
+    },
+    {
+      "capacity": 13577921014,
+      "cooperative": 247,
+      "force": 10,
+      "other": 0,
+      "penalty": 0,
+      "time": 1794787200
+    },
+    {
+      "capacity": 238100000,
+      "cooperative": 6,
+      "force": 1,
+      "other": 0,
+      "penalty": 0,
+      "time": 1794873600
+    }
+  ],
+  "time": 1794875116,
+  "total": { "capacity": 44008672380, "cooperative": 898, "force": 86, "other": 1, "penalty": 0 }
+}

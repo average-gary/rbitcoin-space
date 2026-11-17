@@ -1,0 +1,1144 @@
+{
+  "events": [
+    {
+      "after": { "base_fee_msat": 1000, "fee_rate": 5, "inbound_fee": null },
+      "before": { "base_fee_msat": 1000, "fee_rate": 0, "inbound_fee": null },
+      "by": "node_one",
+      "capacity": 2500000,
+      "event": "fee",
+      "id": "940536x1451x1",
+      "node_one": {
+        "alias": "ArthurReilly",
+        "id": "02d1ef05a2105ad3eb66c78d9b3d751776d975ceef85d09593737e39d54d2a8b09"
+      },
+      "node_two": {
+        "alias": "⚡LightThisNow⚡",
+        "id": "035b82a3172c53e206e6a47ea95f17702d78619f384281f43feca13747a8c33896"
+      },
+      "scid": "1034130268437020673",
+      "time": 1794875538
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 4,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 75,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "by": "node_one",
+      "capacity": 50000000,
+      "event": "fee",
+      "id": "974813x1026x1",
+      "node_one": {
+        "alias": "Sunny Sarah ☀️",
+        "id": "03423790614f023e3c0cdaa654a3578e919947e4c3a14bf5044e7c787ebd11af1a"
+      },
+      "node_two": {
+        "alias": "cyberdyne.sh",
+        "id": "03a93b87bf9f052b8e862d51ebbac4ce5e97b5f4137563cd5128548d7f5978dda9"
+      },
+      "scid": "1071818228474445825",
+      "time": 1794875528
+    },
+    {
+      "after": { "base_fee_msat": 0, "fee_rate": 150, "inbound_fee": null },
+      "before": { "base_fee_msat": 0, "fee_rate": 120, "inbound_fee": null },
+      "by": "node_two",
+      "capacity": 4000000,
+      "event": "fee",
+      "id": "953260x1291x0",
+      "node_one": {
+        "alias": "🌽🦄🌽",
+        "id": "0337694505123a12a8fadd95523dcc235898ad3b80a06e4a63ca26fed68dd0d17c"
+      },
+      "node_two": {
+        "alias": "Imperium_Aeternum",
+        "id": "035f4a3676955e97e87cc306a614c50a6bce1ab26f685904afdf1aa9948279090c"
+      },
+      "scid": "1048120454378356736",
+      "time": 1794875522
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 1840,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -1405 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 1840,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -1403 }
+      },
+      "by": "node_one",
+      "capacity": 25000000,
+      "event": "fee",
+      "id": "870558x2537x1",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "bfx-lnd1",
+        "id": "03cde60a6323f7122d5178255766e38114b4722ede08f7c9e0c5df9b912cc201d6"
+      },
+      "scid": "957188643819683841",
+      "time": 1794875520
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 1159,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -1002 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 1159,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -1000 }
+      },
+      "by": "node_one",
+      "capacity": 20000000,
+      "event": "fee",
+      "id": "920064x738x1",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "LNBiG [Hub-1]",
+        "id": "034ea80f8b148c750463546bd999bf7321a0e6dfc60aaf84bd0400a2e8d376c0d5"
+      },
+      "scid": "1011621066346463233",
+      "time": 1794875520
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 1159,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -1002 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 1159,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -1000 }
+      },
+      "by": "node_one",
+      "capacity": 20000000,
+      "event": "fee",
+      "id": "927720x1796x3",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "LNBiG [Hub-1]",
+        "id": "034ea80f8b148c750463546bd999bf7321a0e6dfc60aaf84bd0400a2e8d376c0d5"
+      },
+      "scid": "1020038927438053379",
+      "time": 1794875520
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 4460,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 4464,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "by": "node_one",
+      "capacity": 5000000,
+      "event": "fee",
+      "id": "949928x1106x3",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "flashsats.xyz",
+        "id": "038ba8f67ba8ff5c48764cdd3251c33598d55b203546d08a8f0ec9dcd9f27e3637"
+      },
+      "scid": "1044456881622482947",
+      "time": 1794875520
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 769,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -573 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 769,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -572 }
+      },
+      "by": "node_one",
+      "capacity": 7500000,
+      "event": "fee",
+      "id": "967685x931x1",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "CoinPayments",
+        "id": "03afa7a8196dbca763ee6f9a34b634a7adc03f154e5d6979fe654db5606b5fb2b1"
+      },
+      "scid": "1063980909585432577",
+      "time": 1794875520
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 1297,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 1298,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "by": "node_one",
+      "capacity": 15000000,
+      "event": "fee",
+      "id": "974378x715x2",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "ACINQ",
+        "id": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f"
+      },
+      "scid": "1071339940895981570",
+      "time": 1794875520
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 1564,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 1566,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "by": "node_one",
+      "capacity": 25000000,
+      "event": "fee",
+      "id": "870594x1531x1",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "bfx-lnd0",
+        "id": "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025"
+      },
+      "scid": "957228226172354561",
+      "time": 1794875519
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 6971,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 6978,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "by": "node_one",
+      "capacity": 12500000,
+      "event": "fee",
+      "id": "920125x1598x4",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "1sats.com⚡️lsp.flashsats.xyz",
+        "id": "02e4971e61a3f55718ae31e2eed19aaf2e32caf3eb5ef5ff03e01aa3ada8907e78"
+      },
+      "scid": "1011688136612118532",
+      "time": 1794875519
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 792,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 793,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "by": "node_two",
+      "capacity": 10745253,
+      "event": "fee",
+      "id": "926865x744x3",
+      "node_one": {
+        "alias": "Open_Hand",
+        "id": "0206db3b9c7475b246d380987bb77cf55acb65e2b0913b6e7d97063efd6d3d3d95"
+      },
+      "node_two": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "scid": "1019098844927361027",
+      "time": 1794875519
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 967,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -884 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 967,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -883 }
+      },
+      "by": "node_one",
+      "capacity": 10000000,
+      "event": "fee",
+      "id": "962474x3013x2",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "Porcino 🍄�🟫",
+        "id": "02f9cdc8df3f142dcef499ce66464e2697f6e80e0db4b1d49c86f3e272931191c1"
+      },
+      "scid": "1058251354629537794",
+      "time": 1794875519
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 1005,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 1007,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "by": "node_one",
+      "capacity": 15000000,
+      "event": "fee",
+      "id": "967685x931x4",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "LNBiG [Hub-2]",
+        "id": "033e9ce4e8f0e68f7db49ffb6b9eecc10605f3f3fcb3c630545887749ab515b9c7"
+      },
+      "scid": "1063980909585432580",
+      "time": 1794875519
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 1174,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -957 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 1174,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -955 }
+      },
+      "by": "node_one",
+      "capacity": 9000000,
+      "event": "fee",
+      "id": "972929x702x1",
+      "node_one": {
+        "alias": "⚡blitz⚡",
+        "id": "028268dcb4c68311613dd3bbb0164f7685b6710022bfa6dcce639acd44695049a2"
+      },
+      "node_two": {
+        "alias": "SilentBob",
+        "id": "02e9046555a9665145b0dbd7f135744598418df7d61d3660659641886ef1274844"
+      },
+      "scid": "1069746748546482177",
+      "time": 1794875519
+    },
+    {
+      "after": { "base_fee_msat": 0, "fee_rate": 4274, "inbound_fee": null },
+      "before": { "base_fee_msat": 0, "fee_rate": 4055, "inbound_fee": null },
+      "by": "node_two",
+      "capacity": 4524587,
+      "event": "fee",
+      "id": "963041x2624x0",
+      "node_one": {
+        "alias": "kappa",
+        "id": "0324ba2392e25bff76abd0b1f7e4b53b5f82aa53fddc3419b051b6c801db9e2247"
+      },
+      "node_two": {
+        "alias": "Meridian Channel Partners",
+        "id": "0343aa2afdcd72e0bb7ed837c3fa0d234898b507057d2098d18503e23ffa6ea360"
+      },
+      "scid": "1058874777696993280",
+      "time": 1794875518
+    },
+    {
+      "after": { "base_fee_msat": 7, "fee_rate": 10, "inbound_fee": null },
+      "before": { "base_fee_msat": 12, "fee_rate": 17, "inbound_fee": null },
+      "by": "node_two",
+      "capacity": 5305983,
+      "event": "fee",
+      "id": "974292x2321x0",
+      "node_one": {
+        "alias": "pi.hub",
+        "id": "02fe6a27ddcb2dd9fa8479fe1d52549b5932079a493b51f1409fa2c5878f1bc07c"
+      },
+      "node_two": {
+        "alias": "Meridian Channel Partners",
+        "id": "0343aa2afdcd72e0bb7ed837c3fa0d234898b507057d2098d18503e23ffa6ea360"
+      },
+      "scid": "1071245383001243648",
+      "time": 1794875518
+    },
+    {
+      "after": { "base_fee_msat": 579, "fee_rate": 289, "inbound_fee": null },
+      "before": { "base_fee_msat": 582, "fee_rate": 291, "inbound_fee": null },
+      "by": "node_one",
+      "capacity": 4649935,
+      "event": "fee",
+      "id": "975390x859x0",
+      "node_one": {
+        "alias": "Meridian Channel Partners",
+        "id": "0343aa2afdcd72e0bb7ed837c3fa0d234898b507057d2098d18503e23ffa6ea360"
+      },
+      "node_two": {
+        "alias": "ACINQ",
+        "id": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f"
+      },
+      "scid": "1072452646672728064",
+      "time": 1794875518
+    },
+    {
+      "after": {
+        "base_fee_msat": 1,
+        "fee_rate": 2183,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -244 }
+      },
+      "before": {
+        "base_fee_msat": 1,
+        "fee_rate": 2071,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": -1245 }
+      },
+      "by": "node_one",
+      "capacity": 1000000,
+      "event": "fee",
+      "id": "932818x2604x0",
+      "node_one": {
+        "alias": "speedupln.com",
+        "id": "023631624e30ef7bcb2887e600da8e59608a093718bc40d35b7a57145a0f3db9af"
+      },
+      "node_two": {
+        "alias": "🇨🇭Vix18",
+        "id": "03d32e5618df518e911e2c0bf4686e9d236ae9ab0afd442f0a5de28b74d64338b3"
+      },
+      "scid": "1025644237769408512",
+      "time": 1794875492
+    },
+    {
+      "after": {
+        "base_fee_msat": 0,
+        "fee_rate": 1274,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "before": {
+        "base_fee_msat": 0,
+        "fee_rate": 1284,
+        "inbound_fee": { "base_fee_msat": 0, "fee_rate": 0 }
+      },
+      "by": "node_one",
+      "capacity": 10000000,
+      "event": "fee",
+      "id": "953412x3180x0",
+      "node_one": {
+        "alias": "Authenticity",
+        "id": "026f46207fd290a33cbd86e29b3ad0a47cdd44ab9aa5267cde66483e10aa9d3180"
+      },
+      "node_two": {
+        "alias": "Corn🌽DKockney2",
+        "id": "032fd1a084588c435984cf990bdd47086d8cf88d6a387df12670d17ef80d2fd2b6"
+      },
+      "scid": "1048287580269576192",
+      "time": 1794875491
+    },
+    {
+      "capacity": 100000,
+      "event": "closed",
+      "height": 976199,
+      "id": "899551x1567x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": null,
+        "id": "02ccda955ba8e3d262bbf404924a382df7bf747d1740019263e10fbefef884b532"
+      },
+      "node_two": {
+        "alias": "bxm",
+        "id": "0335dc0160c4995be2a6e4abad424ebb1db656c492f36145e8ff26604efbf0a5f7"
+      },
+      "scid": "989066784380223489",
+      "time": 1794874453
+    },
+    {
+      "capacity": 3000000,
+      "event": "closed",
+      "height": 976199,
+      "id": "960456x1178x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "DarkStarLightning",
+        "id": "02cc5860bfde06617f8b9818b444f90eff00fe1859c1ae75826a60ca5ebb313804"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "0342db9a6ef15e7e4feda8f3cd7c2512038cd8dde422bf7573b8f00b1bb73b2c43"
+      },
+      "scid": "1056032540044427265",
+      "time": 1794874453
+    },
+    {
+      "capacity": 14000000,
+      "event": "closed",
+      "height": 976199,
+      "id": "960647x4976x0",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "LNServer_Wave",
+        "id": "02b4552a7a85274e4da01a7c71ca57407181752e8568b31d51f13c111a2941dce3"
+      },
+      "node_two": {
+        "alias": "River Financial 1",
+        "id": "03037dc08e9ac63b82581f79b662a4d0ceca8a8ca162b1af3551595b8f2d97b70a"
+      },
+      "scid": "1056242547014238208",
+      "time": 1794874453
+    },
+    {
+      "capacity": 120000000,
+      "event": "closed",
+      "height": 976199,
+      "id": "975914x794x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "1sats.com⚡️lsp.flashsats.xyz",
+        "id": "02e4971e61a3f55718ae31e2eed19aaf2e32caf3eb5ef5ff03e01aa3ada8907e78"
+      },
+      "node_two": {
+        "alias": "fixedfloat.com",
+        "id": "037f990e61acee8a7697966afd29dd88f3b1f8a7b14d625c4f8742bd952003a590"
+      },
+      "scid": "1073028790761422849",
+      "time": 1794874453
+    },
+    {
+      "capacity": 50000000,
+      "event": "closed",
+      "height": 976199,
+      "id": "976066x1689x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "",
+        "id": "024729f3d5f7794f4df09bfdb7ca23a4fbe6c38997cdd213c694a2cca1c27cbb17"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "scid": "1073195916587499521",
+      "time": 1794874453
+    },
+    {
+      "capacity": 50000000,
+      "event": "closed",
+      "height": 976199,
+      "id": "976180x2864x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "",
+        "id": "024570df1d3cbf8a08537515b980d09937f5c9088fcd9af3e7522aa639f20d9167"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "scid": "1073321260990070785",
+      "time": 1794874453
+    },
+    {
+      "capacity": 1000000,
+      "event": "closed",
+      "height": 976198,
+      "id": "949666x2372x0",
+      "kind": "force",
+      "node_one": {
+        "alias": "Megalithic.me",
+        "id": "0322d0e43b3d92d30ed187f4e101a9a9605c3ee5fc9721e6dac3ce3d7732fbb13e"
+      },
+      "node_two": {
+        "alias": "Megalith LSP 2",
+        "id": "034066e29e402d9cf55af1ae1026cc5adf92eed1e0e421785442f53717ad1453b0"
+      },
+      "scid": "1044168809658974208",
+      "time": 1794873995
+    },
+    {
+      "capacity": 50000000,
+      "event": "closed",
+      "height": 976197,
+      "id": "976005x590x0",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "",
+        "id": "024570df1d3cbf8a08537515b980d09937f5c9088fcd9af3e7522aa639f20d9167"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "scid": "1073128846306181120",
+      "time": 1794873329
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976194,
+      "id": "976194x2665x0",
+      "node_one": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "node_two": {
+        "alias": "",
+        "id": "031fab3f6a8ae8588668fbe4bf4cae14c3aaa4134330b1798b81e60aaf9662ff20"
+      },
+      "scid": "1073336654139817984",
+      "time": 1794870688
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976194,
+      "id": "976194x2671x1",
+      "node_one": {
+        "alias": "",
+        "id": "024729f3d5f7794f4df09bfdb7ca23a4fbe6c38997cdd213c694a2cca1c27cbb17"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "scid": "1073336654140211201",
+      "time": 1794870688
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976194,
+      "id": "976194x2867x1",
+      "node_one": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "node_two": {
+        "alias": "OpenNode.com 1",
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073336654153056257",
+      "time": 1794870688
+    },
+    {
+      "capacity": 5000000,
+      "event": "opened",
+      "height": 976195,
+      "id": "976195x2282x1",
+      "node_one": {
+        "alias": "Kraken 🐙⚡",
+        "id": "02437c00ef5de2686a6bd60f8acb5c83d17010916010a15f479d5ef84c04f04485"
+      },
+      "node_two": {
+        "alias": "LukuRutu",
+        "id": "0368cf316080d8eb0f17a8a890e8c98eecad633cc45bc6138597b816a84c602df1"
+      },
+      "scid": "1073337753626345473",
+      "time": 1794870685
+    },
+    {
+      "capacity": 500000,
+      "event": "opened",
+      "height": 976195,
+      "id": "976195x2287x1",
+      "node_one": {
+        "alias": "1ML.com node ALPHA",
+        "id": "0217890e3aad8d35bc054f43acc00084b25229ecff0ab68debd82883ad65ee8266"
+      },
+      "node_two": {
+        "alias": "Old Lake Lightning",
+        "id": "033b73a599410c1a6fb431628a9a75024d7652b919c1e603673a00982dc704e2ec"
+      },
+      "scid": "1073337753626673153",
+      "time": 1794870685
+    },
+    {
+      "capacity": 5000000,
+      "event": "closed",
+      "height": 976195,
+      "id": "966235x1407x1",
+      "kind": "force",
+      "node_one": {
+        "alias": "LNBiG [Hub-2]",
+        "id": "033e9ce4e8f0e68f7db49ffb6b9eecc10605f3f3fcb3c630545887749ab515b9c7"
+      },
+      "node_two": {
+        "alias": "Antistate",
+        "id": "03905aed59919f322abcc107c3cb6767bc7d40ed175a9d143706fc211cad188157"
+      },
+      "scid": "1062386617756352513",
+      "time": 1794870685
+    },
+    {
+      "capacity": 1483360,
+      "event": "closed",
+      "height": 976195,
+      "id": "967464x753x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "BitGo Routing Node",
+        "id": "02757afbc23eafd8c8ffb02fbf92c8ee6bcceb29fbff4d12087f8191a49dc57ef4"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "027c507d9243a9f3b0d62ee675fe5b032eec8570165cd9fd27070914598949ed90"
+      },
+      "scid": "1063737917504028673",
+      "time": 1794870685
+    },
+    {
+      "capacity": 25635086,
+      "event": "opened",
+      "height": 976193,
+      "id": "976193x1291x0",
+      "node_one": {
+        "alias": "LOOP",
+        "id": "021c97a90a411ff2b10dc2a8e32de2f29d2fa49d41bfbb52bd416e460db0747d0d"
+      },
+      "node_two": {
+        "alias": "Bee Tee See",
+        "id": "028803c6dd88596c7cf92566a641f7fb62cc848f525ab0bd5d72b6856fc71a44a9"
+      },
+      "scid": "1073335554538143744",
+      "time": 1794868387
+    },
+    {
+      "capacity": 50000000,
+      "event": "closed",
+      "height": 976193,
+      "id": "976000x2424x0",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "node_two": {
+        "alias": "Megalith LSP",
+        "id": "038a9e56512ec98da2b5789761f7af8f280baf98a09282360cd6ff1381b5e889bf"
+      },
+      "scid": "1073123348868235264",
+      "time": 1794868387
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976192,
+      "id": "976192x1850x1",
+      "node_one": {
+        "alias": "",
+        "id": "024570df1d3cbf8a08537515b980d09937f5c9088fcd9af3e7522aa639f20d9167"
+      },
+      "node_two": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "scid": "1073334455063150593",
+      "time": 1794868127
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976192,
+      "id": "976192x1852x0",
+      "node_one": {
+        "alias": "lndus0.zaphq.io",
+        "id": "027cd974e47086291bb8a5b0160a889c738f2712a703b8ea939985fd16f3aae67e"
+      },
+      "node_two": {
+        "alias": "",
+        "id": "02e1221434a21b8ce5818e92c6ec76301824dc87ed94b4628242e4b1f4a6ff445f"
+      },
+      "scid": "1073334455063281664",
+      "time": 1794868127
+    },
+    {
+      "capacity": 50000000,
+      "event": "closed",
+      "height": 976192,
+      "id": "975305x2250x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "lndus0.zaphq.io",
+        "id": "027cd974e47086291bb8a5b0160a889c738f2712a703b8ea939985fd16f3aae67e"
+      },
+      "node_two": {
+        "alias": "",
+        "id": "031fab3f6a8ae8588668fbe4bf4cae14c3aaa4134330b1798b81e60aaf9662ff20"
+      },
+      "scid": "1072359188275527681",
+      "time": 1794868127
+    },
+    {
+      "capacity": 50000000,
+      "event": "closed",
+      "height": 976192,
+      "id": "975618x3267x0",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "",
+        "id": "024729f3d5f7794f4df09bfdb7ca23a4fbe6c38997cdd213c694a2cca1c27cbb17"
+      },
+      "node_two": {
+        "alias": "lndus0.zaphq.io",
+        "id": "027cd974e47086291bb8a5b0160a889c738f2712a703b8ea939985fd16f3aae67e"
+      },
+      "scid": "1072703335481671680",
+      "time": 1794868127
+    },
+    {
+      "capacity": 291867674,
+      "event": "opened",
+      "height": 976191,
+      "id": "976191x575x1",
+      "node_one": {
+        "alias": "lndus0.zaphq.io",
+        "id": "027cd974e47086291bb8a5b0160a889c738f2712a703b8ea939985fd16f3aae67e"
+      },
+      "node_two": {
+        "alias": "Strike",
+        "id": "03c8e5f583585cac1de2b7503a6ccd3c12ba477cfd139cd4905be504c2f48e86bd"
+      },
+      "scid": "1073333355467964417",
+      "time": 1794867230
+    },
+    {
+      "capacity": 10000000,
+      "event": "closed",
+      "height": 976191,
+      "id": "859817x628x3",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "i'llTryAnythingOnce",
+        "id": "020d1617e27ac022395352f2b3774969593d3d6ddff6fb117d820a9dda8da45217"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "945378789300633603",
+      "time": 1794867230
+    },
+    {
+      "capacity": 51000000,
+      "event": "closed",
+      "height": 976191,
+      "id": "938941x1850x0",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "i'llTryAnythingOnce",
+        "id": "020d1617e27ac022395352f2b3774969593d3d6ddff6fb117d820a9dda8da45217"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1032376547416866816",
+      "time": 1794867230
+    },
+    {
+      "capacity": 150000000,
+      "event": "closed",
+      "height": 976191,
+      "id": "960330x3575x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "1sats.com⚡️lsp.flashsats.xyz",
+        "id": "02e4971e61a3f55718ae31e2eed19aaf2e32caf3eb5ef5ff03e01aa3ada8907e78"
+      },
+      "node_two": {
+        "alias": "fixedfloat.com",
+        "id": "037f990e61acee8a7697966afd29dd88f3b1f8a7b14d625c4f8742bd952003a590"
+      },
+      "scid": "1055894001736417281",
+      "time": 1794867230
+    },
+    {
+      "capacity": 125000000,
+      "event": "closed",
+      "height": 976191,
+      "id": "962802x493x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "1sats.com⚡️lsp.flashsats.xyz",
+        "id": "02e4971e61a3f55718ae31e2eed19aaf2e32caf3eb5ef5ff03e01aa3ada8907e78"
+      },
+      "node_two": {
+        "alias": "fixedfloat.com",
+        "id": "037f990e61acee8a7697966afd29dd88f3b1f8a7b14d625c4f8742bd952003a590"
+      },
+      "scid": "1058611994278297601",
+      "time": 1794867230
+    },
+    {
+      "capacity": 52800000,
+      "event": "closed",
+      "height": 976191,
+      "id": "970857x6109x0",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "BCash_Is_Trash",
+        "id": "0298f6074a454a1f5345cb2a7c6f9fce206cd0bf675d177cdbf0ca7508dd28852f"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1067468560808083456",
+      "time": 1794867230
+    },
+    {
+      "capacity": 500000,
+      "event": "closed",
+      "height": 976191,
+      "id": "975968x2341x0",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": null,
+        "id": "03096429e7e62fa3a296ab42e638ae488c668a2190246f7f1b781d4174b4c9f51c"
+      },
+      "node_two": {
+        "alias": "kappa",
+        "id": "0324ba2392e25bff76abd0b1f7e4b53b5f82aa53fddc3419b051b6c801db9e2247"
+      },
+      "scid": "1073088164490706944",
+      "time": 1794867230
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x1897x0",
+      "node_one": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "node_two": {
+        "alias": "",
+        "id": "02e1221434a21b8ce5818e92c6ec76301824dc87ed94b4628242e4b1f4a6ff445f"
+      },
+      "scid": "1073332256042975232",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x2107x0",
+      "node_one": {
+        "alias": "",
+        "id": "024729f3d5f7794f4df09bfdb7ca23a4fbe6c38997cdd213c694a2cca1c27cbb17"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073332256056737792",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x2109x0",
+      "node_one": {
+        "alias": "",
+        "id": "02e1221434a21b8ce5818e92c6ec76301824dc87ed94b4628242e4b1f4a6ff445f"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073332256056868864",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x2111x0",
+      "node_one": {
+        "alias": "",
+        "id": "024570df1d3cbf8a08537515b980d09937f5c9088fcd9af3e7522aa639f20d9167"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073332256056999936",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x2113x1",
+      "node_one": {
+        "alias": "",
+        "id": "031fab3f6a8ae8588668fbe4bf4cae14c3aaa4134330b1798b81e60aaf9662ff20"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073332256057131009",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x2115x0",
+      "node_one": {
+        "alias": "",
+        "id": "024729f3d5f7794f4df09bfdb7ca23a4fbe6c38997cdd213c694a2cca1c27cbb17"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073332256057262080",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x2117x0",
+      "node_one": {
+        "alias": "",
+        "id": "031fab3f6a8ae8588668fbe4bf4cae14c3aaa4134330b1798b81e60aaf9662ff20"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073332256057393152",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x2119x1",
+      "node_one": {
+        "alias": "",
+        "id": "024570df1d3cbf8a08537515b980d09937f5c9088fcd9af3e7522aa639f20d9167"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073332256057524225",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976190,
+      "id": "976190x2121x1",
+      "node_one": {
+        "alias": "",
+        "id": "02e1221434a21b8ce5818e92c6ec76301824dc87ed94b4628242e4b1f4a6ff445f"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1073332256057655297",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "closed",
+      "height": 976190,
+      "id": "963413x1843x1",
+      "kind": "cooperative",
+      "node_one": {
+        "alias": "Binance",
+        "id": "03a1f3afd646d77bdaf545cceaf079bab6057eae52c6319b63b5803d0989d6a72f"
+      },
+      "node_two": {
+        "alias": null,
+        "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+      },
+      "scid": "1059283795971342337",
+      "time": 1794866908
+    },
+    {
+      "capacity": 50000000,
+      "event": "opened",
+      "height": 976188,
+      "id": "976188x1720x1",
+      "node_one": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "node_two": {
+        "alias": "kappa",
+        "id": "0324ba2392e25bff76abd0b1f7e4b53b5f82aa53fddc3419b051b6c801db9e2247"
+      },
+      "scid": "1073330057008119809",
+      "time": 1794865934
+    },
+    {
+      "capacity": 200000000,
+      "event": "opened",
+      "height": 976188,
+      "id": "976188x1726x0",
+      "node_one": {
+        "alias": "block-iad-1",
+        "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+      },
+      "node_two": {
+        "alias": "ed528ad49bedd1f7a638a",
+        "id": "02a98e8c590a1b5602049d6b21d8f4c8861970aa310762f42eae1b2be88372e924"
+      },
+      "scid": "1073330057008513024",
+      "time": 1794865934
+    }
+  ]
+}

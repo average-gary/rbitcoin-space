@@ -1,0 +1,517 @@
+{
+  "capacity_down": [
+    {
+      "alias": "Binance",
+      "capacity": 27884500000,
+      "capacity_change": -4024047432,
+      "channels": 115,
+      "channels_change": -14,
+      "id": "03a1f3afd646d77bdaf545cceaf079bab6057eae52c6319b63b5803d0989d6a72f"
+    },
+    {
+      "alias": "BitDance LND1",
+      "capacity": 214288484,
+      "capacity_change": -3387846078,
+      "channels": 12,
+      "channels_change": -18,
+      "id": "03a59ebd9a20f2b8d6c366473f6e2e36254aca0ed88d5d46e9b0a3a5276fe25ebf"
+    },
+    {
+      "alias": "1sats.com⚡️lsp.flashsats.xyz",
+      "capacity": 6682773734,
+      "capacity_change": -1606457569,
+      "channels": 168,
+      "channels_change": 0,
+      "id": "02e4971e61a3f55718ae31e2eed19aaf2e32caf3eb5ef5ff03e01aa3ada8907e78"
+    },
+    {
+      "alias": "OpenNode.com 1",
+      "capacity": 450000000,
+      "capacity_change": -595381645,
+      "channels": 9,
+      "channels_change": -14,
+      "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+    },
+    {
+      "alias": "bfx-lnd1",
+      "capacity": 20934316655,
+      "capacity_change": -525000000,
+      "channels": 473,
+      "channels_change": -3,
+      "id": "03cde60a6323f7122d5178255766e38114b4722ede08f7c9e0c5df9b912cc201d6"
+    },
+    {
+      "alias": "LifeIsGood",
+      "capacity": 5824604110,
+      "capacity_change": -448876457,
+      "channels": 131,
+      "channels_change": 0,
+      "id": "0391904d140fdf88d19423513945a5fcc49c606521b65a85f6d6fe46ebdd1c7665"
+    },
+    {
+      "alias": "The Continental",
+      "capacity": 5023668415,
+      "capacity_change": -415000000,
+      "channels": 111,
+      "channels_change": -5,
+      "id": "03c157946cc1cd376b929e36006e645fae490b1b1d4156b40db804e01b4bda48cd"
+    },
+    {
+      "alias": "fixedfloat.com",
+      "capacity": 16140429421,
+      "capacity_change": -401588859,
+      "channels": 149,
+      "channels_change": 1,
+      "id": "037f990e61acee8a7697966afd29dd88f3b1f8a7b14d625c4f8742bd952003a590"
+    },
+    {
+      "alias": "kappa",
+      "capacity": 2587387666,
+      "capacity_change": -355037120,
+      "channels": 353,
+      "channels_change": -58,
+      "id": "0324ba2392e25bff76abd0b1f7e4b53b5f82aa53fddc3419b051b6c801db9e2247"
+    },
+    {
+      "alias": "bfx-lnd0",
+      "capacity": 32211496606,
+      "capacity_change": -250331645,
+      "channels": 539,
+      "channels_change": -5,
+      "id": "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025"
+    }
+  ],
+  "capacity_up": [
+    {
+      "alias": "block-iad-1",
+      "capacity": 23590680064,
+      "capacity_change": 4620390544,
+      "channels": 515,
+      "channels_change": 60,
+      "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+    },
+    {
+      "alias": "Strike",
+      "capacity": 14080809804,
+      "capacity_change": 2130125152,
+      "channels": 323,
+      "channels_change": 14,
+      "id": "03c8e5f583585cac1de2b7503a6ccd3c12ba477cfd139cd4905be504c2f48e86bd"
+    },
+    {
+      "alias": "ACINQ",
+      "capacity": 28271790321,
+      "capacity_change": 1847155215,
+      "channels": 1808,
+      "channels_change": 17,
+      "id": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f"
+    },
+    {
+      "alias": "cyberdyne.sh",
+      "capacity": 8099792503,
+      "capacity_change": 1752199754,
+      "channels": 124,
+      "channels_change": 51,
+      "id": "03a93b87bf9f052b8e862d51ebbac4ce5e97b5f4137563cd5128548d7f5978dda9"
+    },
+    {
+      "alias": "lndus0.zaphq.io",
+      "capacity": 3926668872,
+      "capacity_change": 1738103331,
+      "channels": 51,
+      "channels_change": 16,
+      "id": "027cd974e47086291bb8a5b0160a889c738f2712a703b8ea939985fd16f3aae67e"
+    },
+    {
+      "alias": "Megalithic.me",
+      "capacity": 5470688181,
+      "capacity_change": 1686017812,
+      "channels": 91,
+      "channels_change": 7,
+      "id": "0322d0e43b3d92d30ed187f4e101a9a9605c3ee5fc9721e6dac3ce3d7732fbb13e"
+    },
+    {
+      "alias": "LOOP",
+      "capacity": 8790531239,
+      "capacity_change": 1652589907,
+      "channels": 65,
+      "channels_change": 10,
+      "id": "021c97a90a411ff2b10dc2a8e32de2f29d2fa49d41bfbb52bd416e460db0747d0d"
+    },
+    {
+      "alias": "0256ccca46170ff4b1ef",
+      "capacity": 3000000000,
+      "capacity_change": 1600000000,
+      "channels": 18,
+      "channels_change": 8,
+      "id": "0256ccca46170ff4b1ef54dd51a36ae309e5d139122dea89dfb64d07b8ad2f4b94"
+    },
+    {
+      "alias": "e960fd8385a1603003727",
+      "capacity": 12647318454,
+      "capacity_change": 1545850000,
+      "channels": 241,
+      "channels_change": 17,
+      "id": "039174f846626c6053ba80f5443d0db33da384f1dde135bf7080ba1eec465019c3"
+    },
+    {
+      "alias": "okx",
+      "capacity": 16275743043,
+      "capacity_change": 1456428071,
+      "channels": 385,
+      "channels_change": 12,
+      "id": "0294ac3e099def03c12a37e30fe5364b1223fd60069869142ef96580c8439c2e0a"
+    }
+  ],
+  "channels_down": [
+    {
+      "alias": "kappa",
+      "capacity": 2587387666,
+      "capacity_change": -355037120,
+      "channels": 353,
+      "channels_change": -58,
+      "id": "0324ba2392e25bff76abd0b1f7e4b53b5f82aa53fddc3419b051b6c801db9e2247"
+    },
+    {
+      "alias": "LATES Edge",
+      "capacity": 10035686,
+      "capacity_change": -148500000,
+      "channels": 2,
+      "channels_change": -21,
+      "id": "03b4b86f2301fe2b9ca478ee5980d812de2071a21a9f8f5bb49b88e29a034e1a9b"
+    },
+    {
+      "alias": "BitDance LND1",
+      "capacity": 214288484,
+      "capacity_change": -3387846078,
+      "channels": 12,
+      "channels_change": -18,
+      "id": "03a59ebd9a20f2b8d6c366473f6e2e36254aca0ed88d5d46e9b0a3a5276fe25ebf"
+    },
+    {
+      "alias": "Enigmafi",
+      "capacity": 98745155,
+      "capacity_change": -46827840,
+      "channels": 24,
+      "channels_change": -16,
+      "id": "03127747aa9fb9b4813b7ebdd6ac47eb047954513ab06fe909689c2c42eaa49a33"
+    },
+    {
+      "alias": "Binance",
+      "capacity": 27884500000,
+      "capacity_change": -4024047432,
+      "channels": 115,
+      "channels_change": -14,
+      "id": "03a1f3afd646d77bdaf545cceaf079bab6057eae52c6319b63b5803d0989d6a72f"
+    },
+    {
+      "alias": "OpenNode.com 1",
+      "capacity": 450000000,
+      "capacity_change": -595381645,
+      "channels": 9,
+      "channels_change": -14,
+      "id": "03abf6f44c355dec0d5aa155bdbdd6e0c8fefe318eff402de65c6eb2e1be55dc3e"
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -32500000,
+      "channels": 0,
+      "channels_change": -8,
+      "id": "033e8bc45cc79dabebd18507ba39b101c839240932174bff6ddf34631305881cc3"
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -71150000,
+      "channels": 0,
+      "channels_change": -7,
+      "id": "02cf1c08af45384cd2013935195991845059f0d605fa77a5c6e7c8082f33aa329e"
+    },
+    {
+      "alias": "Sunny Sarah ☀️",
+      "capacity": 4143771192,
+      "capacity_change": -36222026,
+      "channels": 330,
+      "channels_change": -7,
+      "id": "03423790614f023e3c0cdaa654a3578e919947e4c3a14bf5044e7c787ebd11af1a"
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -56641528,
+      "channels": 0,
+      "channels_change": -7,
+      "id": "036cd1474b3ebbc09c1c5dfdab72d1b7bc961314664ec5af2af6c6a822921fde66"
+    }
+  ],
+  "channels_up": [
+    {
+      "alias": "block-iad-1",
+      "capacity": 23590680064,
+      "capacity_change": 4620390544,
+      "channels": 515,
+      "channels_change": 60,
+      "id": "027100442c3b79f606f80f322d98d499eefcb060599efc5d4ecb00209c2cb54190"
+    },
+    {
+      "alias": "cyberdyne.sh",
+      "capacity": 8099792503,
+      "capacity_change": 1752199754,
+      "channels": 124,
+      "channels_change": 51,
+      "id": "03a93b87bf9f052b8e862d51ebbac4ce5e97b5f4137563cd5128548d7f5978dda9"
+    },
+    {
+      "alias": "Violet Relay",
+      "capacity": 9149425,
+      "capacity_change": 6849425,
+      "channels": 49,
+      "channels_change": 44,
+      "id": "03d212a2fa3dba49ae3651c332521ec9676b8fd400324b2d76ff655194b8f29abe"
+    },
+    {
+      "alias": "SILENTYARD",
+      "capacity": 204614725,
+      "capacity_change": 91645750,
+      "channels": 51,
+      "channels_change": 24,
+      "id": "0271fc244e1294594c88948d113ed8e3a64a2d7b6fac9061f1b52edee3b69d7da6"
+    },
+    {
+      "alias": "LNBiG [Hub-1]",
+      "capacity": 10761804143,
+      "capacity_change": 435155273,
+      "channels": 414,
+      "channels_change": 21,
+      "id": "034ea80f8b148c750463546bd999bf7321a0e6dfc60aaf84bd0400a2e8d376c0d5"
+    },
+    {
+      "alias": "Kraken 🐙⚡",
+      "capacity": 14034341897,
+      "capacity_change": 368337845,
+      "channels": 451,
+      "channels_change": 20,
+      "id": "02437c00ef5de2686a6bd60f8acb5c83d17010916010a15f479d5ef84c04f04485"
+    },
+    {
+      "alias": "LNBiG [Hub-2]",
+      "capacity": 15964797481,
+      "capacity_change": 563956837,
+      "channels": 406,
+      "channels_change": 20,
+      "id": "033e9ce4e8f0e68f7db49ffb6b9eecc10605f3f3fcb3c630545887749ab515b9c7"
+    },
+    {
+      "alias": "ed528ad49bedd1f7a638a",
+      "capacity": 11862603795,
+      "capacity_change": 426877348,
+      "channels": 277,
+      "channels_change": 19,
+      "id": "02a98e8c590a1b5602049d6b21d8f4c8861970aa310762f42eae1b2be88372e924"
+    },
+    {
+      "alias": "ACINQ",
+      "capacity": 28271790321,
+      "capacity_change": 1847155215,
+      "channels": 1808,
+      "channels_change": 17,
+      "id": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f"
+    },
+    {
+      "alias": "e960fd8385a1603003727",
+      "capacity": 12647318454,
+      "capacity_change": 1545850000,
+      "channels": 241,
+      "channels_change": 17,
+      "id": "039174f846626c6053ba80f5443d0db33da384f1dde135bf7080ba1eec465019c3"
+    }
+  ],
+  "from": 1794270316,
+  "left": [
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -100000,
+      "channels": 0,
+      "channels_change": -1,
+      "id": "02ccda955ba8e3d262bbf404924a382df7bf747d1740019263e10fbefef884b532",
+      "time": 1794874453
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -3000000,
+      "channels": 0,
+      "channels_change": -1,
+      "id": "0342db9a6ef15e7e4feda8f3cd7c2512038cd8dde422bf7573b8f00b1bb73b2c43",
+      "time": 1794874453
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -1483360,
+      "channels": 0,
+      "channels_change": -1,
+      "id": "027c507d9243a9f3b0d62ee675fe5b032eec8570165cd9fd27070914598949ed90",
+      "time": 1794870685
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": 0,
+      "channels": 0,
+      "channels_change": 0,
+      "id": "03096429e7e62fa3a296ab42e638ae488c668a2190246f7f1b781d4174b4c9f51c",
+      "time": 1794867230
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -818655,
+      "channels": 0,
+      "channels_change": -1,
+      "id": "03a36da2af7be5b6bf3f6416ce372563d2153d0506b8be5aca195be6e15fe76fca",
+      "time": 1794866908
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -300000,
+      "channels": 0,
+      "channels_change": -1,
+      "id": "03c4805029d9a70f8b10fb440ed5a7913ead97466eeb8ee69fed9316c4c14a0963",
+      "time": 1794866908
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": 0,
+      "channels": 0,
+      "channels_change": 0,
+      "id": "0237f05c46df307c9d4d7f6369f2b79b7612f72efcd741e52f888c9c8c5230483d",
+      "time": 1794864195
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": 0,
+      "channels": 0,
+      "channels_change": 0,
+      "id": "0324e103ec44afd745213d7a2835109a2ab09e81bec2192aa55446ef931320e0cb",
+      "time": 1794857121
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -20026166,
+      "channels": 0,
+      "channels_change": -5,
+      "id": "024df925f5af7e44cc9c045f66a87f7600b2c3474fc6e29985b1a7bf9d3a9c50eb",
+      "time": 1794852711
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": -1136256,
+      "channels": 0,
+      "channels_change": -4,
+      "id": "02bf09f3270a6ba8cf2e1d9ffbd90345d9ffc2f66e7c9c2c3e5449c693e965de2f",
+      "time": 1794846353
+    }
+  ],
+  "new": [
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": 0,
+      "channels": 0,
+      "channels_change": 0,
+      "id": "0237f05c46df307c9d4d7f6369f2b79b7612f72efcd741e52f888c9c8c5230483d",
+      "time": 1794855639
+    },
+    {
+      "alias": "03f0cc77c41a331fa9e4",
+      "capacity": 700000,
+      "capacity_change": 700000,
+      "channels": 1,
+      "channels_change": 1,
+      "id": "03f0cc77c41a331fa9e4ca3c3e63ec50707a67a64edb6e65387fb1d58eb68b2354",
+      "time": 1794846364
+    },
+    {
+      "alias": "03b291f41919709ac2d7",
+      "capacity": 1300606,
+      "capacity_change": 1300606,
+      "channels": 2,
+      "channels_change": 2,
+      "id": "03b291f41919709ac2d7d08cbd985cc6fc8f5f40a53996701fd4a91d6563cf7fbf",
+      "time": 1794846121
+    },
+    {
+      "alias": "fast-paycash",
+      "capacity": 3749898,
+      "capacity_change": 3749898,
+      "channels": 1,
+      "channels_change": 1,
+      "id": "02226fd270d558db79615c87dd4ada90aa6f042ba77dc519f212da2214e4de242b",
+      "time": 1794843122
+    },
+    {
+      "alias": "03bc425bd6dc94500c56",
+      "capacity": 200000,
+      "capacity_change": 200000,
+      "channels": 1,
+      "channels_change": 1,
+      "id": "03bc425bd6dc94500c56df3d48b1f05b74c0a41c447c60bd7ea4266c9297e64471",
+      "time": 1794775386
+    },
+    {
+      "alias": "beelink-mainnet",
+      "capacity": 3749898,
+      "capacity_change": 3749898,
+      "channels": 1,
+      "channels_change": 1,
+      "id": "02d230c89a16ff9bd86ba727ad9480e417bfa49355d0b5d8513e493fbeb9289526",
+      "time": 1794770591
+    },
+    {
+      "alias": "ClaudioNode⚡",
+      "capacity": 150000,
+      "capacity_change": 150000,
+      "channels": 1,
+      "channels_change": 1,
+      "id": "02d25aedea3c4575de1cb36a1df4d65c9b9213a0dfe6c2ff3d5ec3d1ab9b85aed1",
+      "time": 1794769296
+    },
+    {
+      "alias": null,
+      "capacity": 0,
+      "capacity_change": 0,
+      "channels": 0,
+      "channels_change": 0,
+      "id": "0324e103ec44afd745213d7a2835109a2ab09e81bec2192aa55446ef931320e0cb",
+      "time": 1794762980
+    },
+    {
+      "alias": "Tornader",
+      "capacity": 10000000,
+      "capacity_change": 10000000,
+      "channels": 1,
+      "channels_change": 1,
+      "id": "028fd634bc2c97aba9a86a70f438fc788adc4c9b692cb35ddf65dd1af97d2c249b",
+      "time": 1794753527
+    },
+    {
+      "alias": "Fix the Money - Fix the World",
+      "capacity": 125000,
+      "capacity_change": 125000,
+      "channels": 1,
+      "channels_change": 1,
+      "id": "0303c660eae5e7335365d77cc84ad69947fcaf3ff23d007454e29315f0917fb2e4",
+      "time": 1794750699
+    }
+  ],
+  "period": "1w",
+  "time": 1794875116
+}
