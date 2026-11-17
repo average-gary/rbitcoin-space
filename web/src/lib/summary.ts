@@ -37,6 +37,11 @@ export interface BlockSummary {
   fee_bands: number[];
   /** Absent from a server that does not name miners. */
   miner?: Miner;
+  /**
+   * Whether the coinbase is laid out as Stratum V2's reference implementation writes it: what the
+   * block's builder wrote, not proof. Absent from an older server: read that as false.
+   */
+  sv2?: boolean;
   /** The block's audit totals, null without one; absent from an older server. Read with `readAudit`. */
   audit?: unknown;
 }
@@ -78,7 +83,8 @@ export function isSummary(v: unknown): v is BlockSummary {
     // Ten for a block stored before the lowest band was split (widenBands), else twelve.
     (bands.length === FEE_BANDS || bands.length === UNSPLIT_BANDS) &&
     bands.every((b) => isCount(b)) &&
-    (s["miner"] === undefined || isMiner(s["miner"]))
+    (s["miner"] === undefined || isMiner(s["miner"])) &&
+    (s["sv2"] === undefined || typeof s["sv2"] === "boolean")
   );
 }
 

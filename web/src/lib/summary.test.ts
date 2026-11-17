@@ -49,6 +49,15 @@ describe("isSummary", () => {
     }
   });
 
+  it("takes the Stratum V2 mark as a boolean, or absent from an older server", () => {
+    expect(isSummary({ ...summary(1), sv2: true })).toBe(true);
+    expect(isSummary({ ...summary(1), sv2: false })).toBe(true);
+    expect("sv2" in summary(1)).toBe(false);
+    for (const sv2 of [null, 1, "true", "Sv2/pool//", {}]) {
+      expect(isSummary({ ...summary(1), sv2 })).toBe(false);
+    }
+  });
+
   it("refuses anything it could not draw", () => {
     expect(isSummary({ ...summary(1), id: "<b>" })).toBe(false);
     expect(isSummary({ ...summary(1), fee_bands: [1, 2] })).toBe(false);

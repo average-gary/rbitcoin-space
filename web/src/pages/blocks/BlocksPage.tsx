@@ -120,9 +120,18 @@ const columns = (
       if (f === undefined) return <Skel size="s" />;
       const m = f === "failed" ? undefined : f.miner;
       return m ? (
-        <Link class="blocks-miner tap-line" href={paths.pool(m.slug)} title={m.name}>
-          {m.name}
-        </Link>
+        <span class="blocks-minercell">
+          <Link class="blocks-miner tap-line" href={paths.pool(m.slug)} title={m.name}>
+            {m.name}
+          </Link>
+          {/* Not a control: it opens nothing of its own, and the block's page explains it. */}
+          {f !== "failed" && f.sv2 === true && (
+            <span class="block-sv2">
+              <span aria-hidden="true">Sv2</span>
+              <span class="visually-hidden">Stratum V2</span>
+            </span>
+          )}
+        </span>
       ) : (
         MISSING
       );

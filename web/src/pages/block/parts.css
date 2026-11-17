@@ -16,6 +16,20 @@
   .block-skel--l {
     width: min(16em, 100%);
   }
+  /* The Stratum V2 mark beside a miner's name, on the blocks list and a block's page. Neutral: it
+     is a kind of block, not a fee, a status or a control's state (docs/DESIGN.md). */
+  .block-sv2 {
+    flex: none;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-regular);
+    /* No taller than the line it sits on, or under on a phone, so a marked row keeps its height. */
+    line-height: var(--leading-tight);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
   @keyframes block-skel-pulse {
     to {
       opacity: 0.45;

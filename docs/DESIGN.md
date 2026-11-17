@@ -411,6 +411,8 @@ Audit, then Transactions (in block order, the coinbase first)
 
 The facts come first in reading order; on a phone the map follows them, then the details. The coinbase tag reads as its words ("Mined by Luxor", "/F2Pool/"), the same reading as the transaction page's coinbase card; a coinbase with no words shows every visible character, dots for the rest, or its hex.
 
+**The Stratum V2 mark.** A block whose coinbase is laid out as the Stratum V2 reference implementation writes it carries "Sv2" after its miner's name, here and in the blocks list. It is a neutral chip: muted text, a `--color-line-strong` outline, `--radius-pill`, `--text-xs`. It names a kind of block, and colour is for fee, status and interaction. In the list it is not a control: it opens nothing of its own, and it reads "Stratum V2" aloud. On a phone it sits under the name, as the age sits under the height, so the name keeps its width and the row its height. On the block's page it is dotted and opens a note (`Note`) on hover, focus or tap: "Mined over Stratum V2", then what that rests on, the coinbase's layout, which is what the block's builder wrote and not something the chain proves. Tiles do not carry it: their pool line is one fixed line.
+
 ### Transaction
 
 ```text

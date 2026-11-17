@@ -281,6 +281,16 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+  /* The miner's name, cut where the column is narrow, and the Stratum V2 mark whole after it. */
+  .block-miner {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  /* On this page the mark opens a note: room under its word for the dotted line that says so. */
+  .block-miner .block-sv2 {
+    line-height: var(--leading-body);
+  }
   .block-fact__pending {
     font-size: var(--text-sm);
     color: var(--color-text-muted);

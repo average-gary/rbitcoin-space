@@ -22,6 +22,7 @@ import { FeeKey, FeeRate } from "../../components/FeeRate";
 import { Goggles } from "../../components/Goggles";
 import { Hash, HashFull } from "../../components/Hash";
 import { Link } from "../../components/Link";
+import { Note } from "../../components/Note";
 import { SectionHeader } from "../../components/SectionHeader";
 import { describeBands, Strata, strataLayers, strataTop } from "../../components/Strata";
 import { ErrorState } from "../../components/States";
@@ -195,6 +196,11 @@ function PageError(props: { error: unknown; retry: () => void }) {
     </div>
   );
 }
+
+/** What the Stratum V2 mark rests on: the coinbase's layout, which its builder chose. */
+const SV2_NOTE =
+  "The coinbase is laid out as the Stratum V2 reference implementation writes it, " +
+  "Sv2/<pool tag>/<miner tag>/. That is what the block's builder wrote, not something the chain proves.";
 
 /** One label and value in the facts list. `sub` is a muted second line; space for it is always kept. */
 function Fact(props: {
@@ -517,13 +523,24 @@ function BlockView(props: { hash?: string | undefined; height?: number | undefin
                           }
                         >
                           {(m) => (
-                            <Link
-                              class="block-fact__line tap-line"
-                              href={paths.pool(m().slug)}
-                              title={m().name}
-                            >
-                              {m().name}
-                            </Link>
+                            <span class="block-miner">
+                              <Link
+                                class="block-fact__line tap-line"
+                                href={paths.pool(m().slug)}
+                                title={m().name}
+                              >
+                                {m().name}
+                              </Link>
+                              <Show when={sum()?.sv2 === true}>
+                                <Note
+                                  focusable
+                                  title="Mined over Stratum V2"
+                                  figure={<span class="block-sv2 tap">Sv2</span>}
+                                >
+                                  {SV2_NOTE}
+                                </Note>
+                              </Show>
+                            </span>
                           )}
                         </Show>
                       )
