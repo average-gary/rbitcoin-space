@@ -1,8 +1,10 @@
-//! Pure logic behind the mining routes: who mined a block ([`pools`]), the periods a client may
-//! ask for ([`Interval`]) and hashrate from proof of work over time ([`hashrate`]). The block
-//! table's statements for them are in `blocks::mining`; the routes in the server.
+//! Pure logic behind the mining routes: who mined a block ([`pools`], reading a Stratum V2
+//! coinbase tag with [`sv2`]), the periods a client may ask for ([`Interval`]) and hashrate from
+//! proof of work over time ([`hashrate`]). The block table's statements for them are in
+//! `blocks::mining`; the routes in the server.
 
 pub mod pools;
+pub mod sv2;
 
 use crate::blocks::Bucket;
 

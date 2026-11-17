@@ -25,5 +25,16 @@
       "plebhash"
     ],
     "link": ""
+  },
+  {
+    "id": 140,
+    "name": "MARA Pool",
+    "addresses": [
+      "32i1m6gNcSHwiPX9nfTNXVjme9j5DU8y5g"
+    ],
+    "tags": [
+      "MARA🇺🇸"
+    ],
+    "link": ""
   }
 ]
