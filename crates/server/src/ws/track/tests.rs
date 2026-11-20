@@ -283,7 +283,7 @@ impl Mock {
         n.sequence += 1;
     }
 
-    fn evict(&self, id: Txid) {
+    pub(crate) fn evict(&self, id: Txid) {
         let mut n = self.node();
         let gone = n.with_descendants(&[id]);
         n.take(&gone);
@@ -2132,4 +2132,14 @@ async fn the_replacements_topic_says_each_change_of_the_record() {
     s.settle().await;
     c.drain();
     assert_eq!(version(&c.last["replacements"]), mined);
+}
+
+#[test]
+fn a_public_key_is_followed_as_its_pay_to_pubkey_script() {
+    let key = "04a8c3fa3dbc022ca7c9a2214c5e673833317b3cff37c0fc170fc347f1a2f6b6e2a53db4d023387f89209de481cd014a44040e1b09c3226d40fed02c0bc8d0f548";
+    let written = format!("address:{}", key.to_ascii_uppercase());
+    let (topic, name) = parse(&written, Network::Regtest).unwrap();
+    let script = ScriptBuf::from_hex(&format!("41{key}ac")).unwrap();
+    assert!(topic == Topic::Address(ScriptHash::from_script(&script)));
+    assert_eq!(name, format!("address:{key}"));
 }

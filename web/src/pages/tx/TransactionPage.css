@@ -512,6 +512,86 @@
     font-weight: var(--weight-bold);
   }
 
+  /* ---- A lookalike address handed over from an address page (Lookalike.tsx) ---- */
+  /* The address page's notice, in its language: the caution rule, the triangle, a heading. */
+  .tx-lookalike {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--color-line);
+    border-left: 3px solid var(--color-caution);
+    border-radius: 0 var(--radius-l) var(--radius-l) 0;
+    background: var(--color-surface);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+  }
+  .tx-lookalike .lookalike__icon {
+    margin-top: 3px;
+  }
+  .tx-lookalike__body {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    max-width: 46rem;
+  }
+  .tx-lookalike__title {
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    line-height: 1.3;
+  }
+  .tx-lookalike__quiet {
+    color: var(--color-text-muted);
+  }
+  /* Its card's caution rule is with the cards (".tx-flow__item"), after their border. */
+  .tx-lookalike-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--color-text);
+    font-weight: var(--weight-bold);
+  }
+  .tx-lookalike-tag .lookalike__icon {
+    width: 12px;
+    height: 12px;
+    margin-top: 0;
+  }
+  /* The inspector's address, whole and marked, its copy button beside it. */
+  /* The copy button's target reaches 8 px past its box (CopyButton.css), in pixels whatever the
+     reader's text size, so the gap is 8 px at least: a tap on the address's last character opens
+     it, never copies it. */
+  .tx-lookalike-addr {
+    display: flex;
+    align-items: flex-start;
+    gap: max(var(--space-2), 8px);
+    min-width: 0;
+  }
+  .tx-lookalike-addr .tap-line {
+    min-width: 0;
+    color: inherit;
+  }
+  .tx-lookalike-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border-left: 3px solid var(--color-caution);
+    background: var(--color-surface-sunken);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-regular);
+    line-height: 1.45;
+  }
+  .tx-lookalike-note__body {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  .tx-lookalike-note__like {
+    display: grid;
+    min-width: 0;
+  }
+
   .tx-chain {
     display: grid;
     gap: var(--space-3);
@@ -622,6 +702,17 @@
   }
   .tx-answer__nowrap {
     white-space: nowrap;
+  }
+  /* The verdict on its rate: a quiet line under the fee, its note a tap or key away. On a touch
+     screen its button reaches a thumb's height past the line, over the lines beside it. */
+  .tx-verdict .note-figure {
+    text-align: left;
+  }
+  @media (pointer: coarse) {
+    .tx-verdict .note-figure {
+      padding-block: calc((var(--touch) - 1lh) / 2);
+      margin-block: calc((var(--touch) - 1lh) / -2);
+    }
   }
   /* A sentence with figures in it: tabular digits, free to wrap between its words. */
   .tx-answer__figures {
@@ -814,6 +905,11 @@
   .tx-flow__item.is-selected {
     border-color: var(--color-accent);
     box-shadow: 0 0 0 1px var(--color-accent);
+  }
+  /* A handed-over lookalike's card (Lookalike.tsx): the caution rule on the left, after the card's
+     border and the selection's colour, beside a word with the triangle, never the colour alone. */
+  .tx-flow__item.tx-flow__item--lookalike {
+    border-left: 3px solid var(--color-caution);
   }
   .tx-flow__who {
     grid-area: who;
@@ -1126,7 +1222,8 @@
       grid-column: 1 / -1;
       margin-top: var(--space-2);
     }
-    .tx-notice {
+    .tx-notice,
+    .tx-lookalike {
       padding: var(--space-3);
     }
   }

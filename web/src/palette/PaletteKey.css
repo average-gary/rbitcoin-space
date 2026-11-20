@@ -1,0 +1,117 @@
+/* The header's ways into the palette. In the shell's first load, so kept small. */
+@layer components {
+  /* The search and its hint share the search's cell: the field takes what the hint leaves. */
+  /* Not positioned: "Go to" below hangs from the header itself (PaletteKey.tsx). */
+  .site-header__search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .site-header__search > .search {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Key caps, as the search's "/" is drawn, in a 44 px target. */
+  .palette-hint {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 3px;
+    min-height: var(--touch);
+    padding: 0 var(--space-1);
+    border: 0;
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .palette-hint kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    border: 1px solid var(--color-line-strong);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-s);
+    background: var(--color-surface);
+    font: inherit;
+    font-size: var(--text-xs);
+    line-height: 1;
+    transition: transform var(--dur-instant) var(--ease-out);
+  }
+  @media (hover: hover) {
+    .palette-hint:hover {
+      color: var(--color-text);
+    }
+    .palette-hint:hover kbd {
+      border-color: var(--color-text-muted);
+    }
+  }
+  .palette-hint:active kbd {
+    transform: translateY(1px);
+  }
+
+  /* Hangs from the header's bottom edge, below every row the header has at this width, over the
+     page only: never over a header control. Its containing block is the header (sticky, or
+     relative on a short screen); its left and width follow the search field, which PaletteKey.tsx
+     measures. Over the page it may cover what lies just under the header while the search has
+     focus, as a dropdown of the search does; it goes on blur or Escape. */
+  .palette-go {
+    position: absolute;
+    top: calc(100% + 1px + var(--space-1));
+    left: var(--go-left, var(--gutter));
+    width: var(--go-width, calc(100% - 2 * var(--gutter)));
+    z-index: 1;
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--touch);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-m);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-pop);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-align: left;
+    cursor: pointer;
+  }
+  .palette-go svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    fill: none;
+    stroke: var(--color-text-muted);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+  @media (hover: hover) {
+    .palette-go:hover {
+      background: var(--color-surface-sunken);
+    }
+  }
+
+  /* Where the search's cell is too narrow for both, the hint gives way, so the search's placeholder
+     keeps its words (palette.e2e.ts measures it with every section on), and "Go to" takes its
+     place: shown while the search, or "Go to" itself, has focus, so Tab reaches it next and
+     Shift+Tab goes back to the search. The header's sections stay where they are. While the
+     search's own list or answer is open, that is what hangs there. */
+  @media (max-width: 44em), (min-width: 65.0625em) and (max-width: 78em) {
+    .palette-hint {
+      display: none;
+    }
+    .site-header__search:focus-within:not(:has(.search__list, .search__panel)) .palette-go {
+      display: flex;
+    }
+  }
+  /* Nor while the network menu is open beside a focused search ("/" leaves it open): it hangs below
+     the header too. A phone's search hides the network switch, menu and all, while it has focus. */
+  @media (min-width: 40.0625em) and (max-width: 44em),
+    (min-width: 65.0625em) and (max-width: 78em) {
+    .site-header__inner:has(#network-menu:not([hidden])) .site-header__search .palette-go {
+      display: none;
+    }
+  }
+}

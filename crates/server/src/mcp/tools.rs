@@ -118,7 +118,9 @@ pub(super) fn list(networks: &[Network]) -> Value {
             "An address's confirmed balance, totals received and sent, transaction count, \
              unconfirmed change, and its ten newest confirmed transactions (`value` is the net \
              change for the address).",
-            on(json!({ "address": { "type": "string", "description": "A Bitcoin address." } })),
+            on(
+                json!({ "address": { "type": "string", "description": "A Bitcoin address, or a public key in hex for the outputs paid to the key itself (P2PK)." } })
+            ),
             &["address"],
         ),
         tool(
@@ -578,11 +580,12 @@ async fn address(from: &Asker<'_>, args: &Args) -> Result<Value, Failed> {
         height: Option<u64>,
         time: Option<u64>,
     }
-    const BAD: &str = "address is required: a Bitcoin address";
+    const BAD: &str = "address is required: a Bitcoin address or a public key";
     let net = network(from.mcp, args)?;
     let text = string(args, "address", BAD)?;
-    // Every address form is letters and digits; the route parses it for the network.
-    if text.is_empty() || text.len() > 100 || !text.bytes().all(|b| b.is_ascii_alphanumeric()) {
+    // Every address form is letters and digits, and the longest thing taken in an address's
+    // place is an uncompressed public key's 130; the route parses it for the network.
+    if text.is_empty() || text.len() > 130 || !text.bytes().all(|b| b.is_ascii_alphanumeric()) {
         return Err(BAD.into());
     }
     let base = format!("{}/api/address/{text}", net.path_prefix());
@@ -744,7 +747,6 @@ async fn lightning_node(from: &Asker<'_>, args: &Args) -> Result<Value, Failed> 
     let net = network(from.mcp, args)?;
     let base = format!("{}/api/v1/lightning", net.path_prefix());
     let text = string(args, "node", BAD)?.trim();
-    let untrusted = json!(["alias"]);
     if text.len() == 66 && text.bytes().all(|b| b.is_ascii_hexdigit()) {
         let key = text.to_ascii_lowercase();
         let Value::Object(node) = from
@@ -773,7 +775,8 @@ async fn lightning_node(from: &Asker<'_>, args: &Args) -> Result<Value, Failed> 
                 node.get(field).cloned().unwrap_or(Value::Null),
             );
         }
-        kept.insert("untrusted_text".into(), untrusted);
+        // An announced address can be a hostname the node chose.
+        kept.insert("untrusted_text".into(), json!(["alias", "sockets"]));
         return Ok(Value::Object(kept));
     }
     if !(3..=66).contains(&text.chars().count()) {
@@ -796,6 +799,6 @@ async fn lightning_node(from: &Asker<'_>, args: &Args) -> Result<Value, Failed> 
     Ok(json!({
         "network": net.name(),
         "matches": found.get("nodes"),
-        "untrusted_text": untrusted,
+        "untrusted_text": ["alias"],
     }))
 }

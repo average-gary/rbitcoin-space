@@ -2,8 +2,10 @@ import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { Amount } from "../../components/Amount";
 import { Hash } from "../../components/Hash";
+import { scriptKey } from "../../lib/address";
 import type { Outspend, Transaction, Vin, Vout } from "../../lib/esplora";
 import { formatSize, groupDigits } from "../../lib/format";
+import type { Lookalike } from "../../lib/lookalike";
 import { paths } from "../../lib/network";
 import type { TagPart } from "../block/chain";
 import {
@@ -16,6 +18,7 @@ import {
 } from "./chaintext";
 import { Code } from "./Code";
 import { ChainWords, type Selection } from "./Flow";
+import { MarkedAddress } from "./Lookalike";
 import { classify, disassemble, isText, lastPush, opReturnData } from "./script";
 import {
   coinbaseHeight,
@@ -80,6 +83,8 @@ export function Inspector(props: {
   outspends: () => Outspend[] | null | undefined;
   onClose: () => void;
   ref: (el: HTMLHeadingElement) => void;
+  /** Lookalike addresses handed over from an address page, by address. */
+  lookalike?: ReadonlyMap<string, Lookalike> | undefined;
 }) {
   const title = () =>
     `${props.selected.side === "in" ? "Input" : "Output"} ${props.selected.index}`;
@@ -95,7 +100,7 @@ export function Inspector(props: {
       </div>
       <Switch>
         <Match when={props.selected.side === "in" && props.tx.vin?.[props.selected.index]}>
-          {(vin) => <InputDetails vin={vin()} tx={props.tx} />}
+          {(vin) => <InputDetails vin={vin()} tx={props.tx} lookalike={props.lookalike} />}
         </Match>
         <Match when={props.selected.side === "out" && props.tx.vout[props.selected.index]}>
           {(vout) => (
@@ -104,6 +109,7 @@ export function Inspector(props: {
               spend={props.outspends()?.[props.selected.index]}
               failed={props.outspends() === null}
               unspendable={whyUnspendable(props.tx, vout())}
+              lookalike={props.lookalike}
             />
           )}
         </Match>
@@ -112,7 +118,51 @@ export function Inspector(props: {
   );
 }
 
-function InputDetails(props: { vin: Vin; tx: Transaction }) {
+/** The key a pay-to-pubkey output pays, linked to its page: it has no address. Else "None". */
+function Key(props: { out: Vout }) {
+  return (
+    <Show when={scriptKey(props.out.scriptpubkey)} fallback="None">
+      {(k) => (
+        <Hash
+          value={k()}
+          href={paths.address(k())}
+          head={14}
+          tail={10}
+          copyLabel="Copy public key"
+        />
+      )}
+    </Show>
+  );
+}
+
+/** An input's or output's address: marked whole when it is a lookalike handed over, else short. */
+function Address(props: {
+  address: string;
+  lookalike: ReadonlyMap<string, Lookalike> | undefined;
+}) {
+  return (
+    <Show
+      when={props.lookalike?.get(props.address)}
+      fallback={
+        <Hash
+          value={props.address}
+          href={paths.address(props.address)}
+          head={14}
+          tail={10}
+          copyLabel="Copy address"
+        />
+      }
+    >
+      {(l) => <MarkedAddress l={l()} />}
+    </Show>
+  );
+}
+
+function InputDetails(props: {
+  vin: Vin;
+  tx: Transaction;
+  lookalike: ReadonlyMap<string, Lookalike> | undefined;
+}) {
   const inscription = createMemo(() => inscriptionOf(props.vin));
   const text = createMemo(() => inputText(props.vin, SHOW_ALL_MAX)?.parts ?? null);
   const coinbase = createMemo(() =>
@@ -173,17 +223,9 @@ function InputDetails(props: { vin: Vin; tx: Transaction }) {
                 <Fact label="Amount">
                   <Amount sats={p().value} />
                 </Fact>
-                <Fact label="Address">
-                  <Show when={p().scriptpubkey_address} fallback="None">
-                    {(a) => (
-                      <Hash
-                        value={a()}
-                        href={paths.address(a())}
-                        head={14}
-                        tail={10}
-                        copyLabel="Copy address"
-                      />
-                    )}
+                <Fact label={scriptKey(p().scriptpubkey) ? "Public key" : "Address"}>
+                  <Show when={p().scriptpubkey_address} fallback={<Key out={p()} />}>
+                    {(a) => <Address address={a()} lookalike={props.lookalike} />}
                   </Show>
                 </Fact>
                 <Fact label="Script type">{classify(p().scriptpubkey).label}</Fact>
@@ -254,6 +296,7 @@ function OutputDetails(props: {
   spend: Outspend | undefined;
   failed: boolean;
   unspendable: string | null;
+  lookalike: ReadonlyMap<string, Lookalike> | undefined;
 }) {
   const kind = () => classify(props.vout.scriptpubkey);
   const data = createMemo(() =>
@@ -265,17 +308,9 @@ function OutputDetails(props: {
         <Fact label="Amount">
           <Amount sats={props.vout.value} />
         </Fact>
-        <Fact label="Address">
-          <Show when={props.vout.scriptpubkey_address} fallback="None">
-            {(a) => (
-              <Hash
-                value={a()}
-                href={paths.address(a())}
-                head={14}
-                tail={10}
-                copyLabel="Copy address"
-              />
-            )}
+        <Fact label={scriptKey(props.vout.scriptpubkey) ? "Public key" : "Address"}>
+          <Show when={props.vout.scriptpubkey_address} fallback={<Key out={props.vout} />}>
+            {(a) => <Address address={a()} lookalike={props.lookalike} />}
           </Show>
         </Fact>
         <Fact label="Script type">{kind().label}</Fact>

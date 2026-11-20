@@ -58,6 +58,49 @@ describe("retryFiles", () => {
   });
 });
 
+describe("retryFiles narrowed to a caller's own files", () => {
+  /** A failed stylesheet that answers to an address, which happy-dom would fetch if it were set. */
+  function failedAt(name: string, href: string): HTMLLinkElement {
+    const link = failedLink(name);
+    Object.defineProperty(link, "href", { value: href });
+    return link;
+  }
+
+  it("asks only for those, and leaves the others on the list for the next call", async () => {
+    const page = failedAt("page", "/assets/DecodePage-a1.css");
+    const own = failedAt("own", "/assets/Palette-b2.css");
+    const narrowed = retryFiles((href) => href.includes("/Palette-"));
+    // Its own was asked for again, through a new link; the page's was left as it failed.
+    expect(current("own")).not.toBe(own);
+    expect(current("page")).toBe(page);
+    // A call for everything, made meanwhile, still finds the page's stylesheet and asks for it.
+    const all = retryFiles();
+    expect(current("page")).not.toBe(page);
+    current("page")?.dispatchEvent(new Event("load"));
+    await expect(all).resolves.toStrictEqual({ scripts: false });
+    current("own")?.dispatchEvent(new Event("load"));
+    await expect(narrowed).resolves.toStrictEqual({ scripts: false });
+  });
+
+  it("leaves a failed script it was not asked about, so the next call still proves it", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(() =>
+      Promise.resolve(new Response("x", { status: 200 })),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const preload = document.createElement("link");
+    preload.rel = "modulepreload";
+    preload.href = "/assets/DecodePage-c3.js";
+    document.head.append(preload);
+    preload.dispatchEvent(new Event("error"));
+    await expect(retryFiles((href) => href.includes("/Palette-"))).resolves.toStrictEqual({
+      scripts: false,
+    });
+    expect(fetch).not.toHaveBeenCalled();
+    await expect(retryFiles()).resolves.toStrictEqual({ scripts: true });
+    vi.unstubAllGlobals();
+  });
+});
+
 /** A script preload that has failed, as Vite adds one for a page's code. */
 function failedPreload(href: string): void {
   const link = document.createElement("link");

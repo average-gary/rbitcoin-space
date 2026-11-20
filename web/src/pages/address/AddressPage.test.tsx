@@ -6,6 +6,7 @@ import { clearApiCache } from "../../lib/api";
 import type { AddressStats, Transaction, Utxo } from "../../lib/esplora";
 import { FakeSocket } from "../../lib/fakes";
 import { NNBSP } from "../../lib/format";
+import { readHandover } from "../../lib/lookalike";
 import AddressPage from "./AddressPage";
 
 const ME = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";
@@ -279,6 +280,58 @@ describe("address page", () => {
     // Leaving the page lets the topic go: the last subscriber gone, the socket closes.
     for (const d of disposers.splice(0)) d();
     expect(FakeSocket.last().closedWith).toBe(1000);
+  });
+
+  it("keeps an unchanged row's elements, and the focus in it, when its history is asked again", async () => {
+    let page = [tx(1, [[OTHER, 2000]], [[ME, 1000]])];
+    const answers: Response[] = [];
+    serve({
+      [`/address/${ME}`]: () => Response.json(stats()),
+      // Each answer is parsed anew: the same transactions, never the same objects.
+      [`/address/${ME}/txs`]: () => {
+        const answer = Response.json(page);
+        answers.push(answer);
+        return answer;
+      },
+    });
+    const el = open(`/address/${ME}`);
+    await until(() => expect(el.querySelectorAll("tbody tr .hash")).toHaveLength(1));
+    await until(() => expect(text(el.querySelector(".address-live") as Element)).toBe("Live"));
+    /** Once the newest answer has been read and what it changed is drawn. */
+    const applied = async (n: number) => {
+      await until(() => expect(answers[n - 1]?.bodyUsed).toBe(true));
+      for (let i = 0; i < 5; i++) {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 0);
+        });
+        flush();
+      }
+    };
+    const row = el.querySelector("tbody tr");
+    const link = row?.querySelector<HTMLAnchorElement>(".hash a");
+    link?.focus();
+    expect(document.activeElement).toBe(link);
+    // Asked again, and the answer is the same history: nothing is rebuilt. The very elements, not
+    // ones like them, so a reader's focus, or a test's hold on a row, is not lost.
+    const before = answers.length;
+    status("s2");
+    await applied(before + 1);
+    expect([...el.querySelectorAll("tbody tr")]).toStrictEqual([row]);
+    expect(row?.isConnected).toBe(true);
+    expect(document.activeElement).toBe(link);
+    // A payment arrives above it: its row is the same element still, moved down one.
+    page = [tx(2, [[OTHER, 9000]], [[ME, 8000]], false), ...page];
+    status("s3");
+    await until(() => expect(el.querySelectorAll("tbody tr .hash")).toHaveLength(2));
+    expect(el.querySelectorAll("tbody tr")[1]).toBe(row);
+    // The same transaction in the same block, answered differently (a node that has since pruned
+    // its inputs, say): what the answer says now is drawn, never the object held from before.
+    expect(text(row as Element)).toContain("+0.00001000");
+    page = [tx(2, [[OTHER, 9000]], [[ME, 8000]], false), tx(1, [[OTHER, 2000]], [[ME, 1500]])];
+    status("s4");
+    await until(() =>
+      expect(text(el.querySelectorAll("tbody tr")[1] as Element)).toContain("+0.00001500"),
+    );
   });
 
   it("asks again for a change heard while the last one is still being fetched", async () => {
@@ -957,6 +1010,266 @@ describe("address page", () => {
   });
 });
 
+describe("lookalike addresses", () => {
+  // Agrees with ME on "w5" after "bc1q" and on the last four, "f3t4".
+  const FAKE = `bc1qw5${"q".repeat(32)}f3t4`;
+  const PAYEE = `bc1pdcl${"q".repeat(51)}4uu7`;
+  const FAKE_PAYEE = `bc1pdcl${"p".repeat(51)}4uu7`;
+  const rows = (el: Element) => el.querySelectorAll(".address-txs tbody tr:not(.table__note)");
+  const notes = (el: Element) => [...el.querySelectorAll(".address-txs .table__note")];
+
+  it("warns under a row that names a lookalike of the page's own address, as text", async () => {
+    serve({
+      [`/address/${ME}`]: stats(part(2000, 0, 2)),
+      [`/address/${ME}/txs`]: [
+        tx(1, [[FAKE, 1000]], [[ME, 546]]),
+        tx(2, [[OTHER, 2000]], [[ME, 1454]]),
+      ],
+    });
+    const el = open(`/address/${ME}`);
+    await until(() => expect(rows(el)).toHaveLength(2));
+    const [note] = notes(el);
+    expect(notes(el)).toHaveLength(1);
+    // Right under the row of the transaction that names it.
+    expect(note?.previousElementSibling?.textContent).toContain(txid(1).slice(0, 8));
+    expect(note?.querySelector("td")?.getAttribute("colspan")).toBe("4");
+    const warning = note?.querySelector('[role="note"]') as Element;
+    expect(text(warning)).toContain("An address here looks like this page's address");
+    expect(text(warning)).toContain(FAKE);
+    expect(text(warning)).toContain(ME);
+    expect(text(warning)).toContain("Check every character");
+    expect(text(warning)).toContain("may be address poisoning");
+    expect(text(warning)).toContain("agree on the first 2 and last 4 characters after bc1q");
+    const agree = [...warning.querySelectorAll(".lookalike__agree")].map((e) => text(e));
+    expect(agree).toStrictEqual(["w5", "f3t4", "w5", "f3t4"]);
+    // Nothing in it is a link or markup: the addresses are chain data.
+    expect(warning.querySelector("a, img, script")).toBeNull();
+  });
+
+  it("hands a flagged row's findings to its transaction page in history state, not the URL", async () => {
+    const one = tx(1, [[FAKE, 1000]], [[ME, 546]]);
+    serve({
+      [`/address/${ME}`]: stats(part(2000, 0, 2)),
+      [`/address/${ME}/txs`]: [one, tx(2, [[OTHER, 2000]], [[ME, 1454]])],
+    });
+    const el = open(`/address/${ME}`);
+    await until(() => expect(rows(el)).toHaveLength(2));
+    const [flagged, plain] = [...rows(el)];
+    // The txid's link and the whole row's link both carry it.
+    const links = [...(flagged?.querySelectorAll("a") ?? [])];
+    expect(links).toHaveLength(2);
+    for (const a of links) {
+      expect(a.getAttribute("href")).toBe(`/tx/${txid(1)}`);
+      const h = readHandover(JSON.parse(a.getAttribute("state") ?? "null"), one, "mainnet");
+      expect(h?.from).toBe(ME);
+      expect(h?.found.map((l) => [l.here, l.like, l.own, l.head, l.tail])).toStrictEqual([
+        [FAKE, ME, true, 2, 4],
+      ]);
+    }
+    // A row without a lookalike carries nothing, and no link anywhere names the address in its URL.
+    expect(plain?.querySelector("a[state]")).toBeNull();
+    for (const a of el.querySelectorAll(".address-txs a")) {
+      expect(a.getAttribute("href")).not.toContain(ME);
+    }
+  });
+
+  it("marks an earlier row once a later page brings a lookalike of its payee", async () => {
+    const first = Array.from({ length: 25 }, (_, i) =>
+      i === 3 ? tx(4, [[ME, 9000]], [[PAYEE, 8000]]) : tx(i + 1, [[OTHER, 2000]], [[ME, 1000]]),
+    );
+    serve({
+      [`/address/${ME}`]: stats(part(26_000, 9000, 26)),
+      [`/address/${ME}/txs`]: first,
+      [`/address/${ME}/txs?after_txid=${txid(25)}`]: [tx(26, [[FAKE_PAYEE, 1000]], [[ME, 546]])],
+    });
+    const el = open(`/address/${ME}`);
+    await until(() => expect(rows(el)).toHaveLength(25));
+    expect(el.querySelector(".lookalike")).toBeNull();
+    [...el.querySelectorAll("button")].find((b) => text(b) === "Show 25 more")?.click();
+    await until(() => expect(notes(el)).toHaveLength(2));
+    const [paid, poison] = notes(el);
+    expect(paid?.previousElementSibling?.textContent).toContain(txid(4).slice(0, 8));
+    expect(text(paid as Element)).toContain("looks like another in this history");
+    expect(text(paid as Element)).toContain(FAKE_PAYEE);
+    expect(text(poison as Element)).toContain(PAYEE);
+    expect(text(poison as Element)).toContain("Elsewhere in this history");
+  });
+
+  it("adds nothing to an ordinary history", async () => {
+    serve({
+      [`/address/${ME}`]: stats(part(2000, 0, 2)),
+      [`/address/${ME}/txs`]: [
+        tx(1, [[OTHER, 1000]], [[ME, 546]]),
+        tx(2, [[ME, 546]], [[OTHER, 300]]),
+      ],
+    });
+    const el = open(`/address/${ME}`);
+    await until(() => expect(rows(el)).toHaveLength(2));
+    expect(notes(el)).toHaveLength(0);
+    expect(text(el)).not.toContain("poisoning");
+  });
+
+  describe("the notice at the top", () => {
+    const poison = (el: Element) => el.querySelector(".address-poison");
+    const live = (el: Element) => text(el.querySelector(".address-announce") as Element);
+    const button = (el: Element, name: string) =>
+      [...el.querySelectorAll("button")].find((b) => text(b) === name);
+
+    it("says nothing, and announces nothing, for an ordinary history", async () => {
+      serve({
+        [`/address/${ME}`]: stats(part(2000, 0, 2)),
+        [`/address/${ME}/txs`]: [tx(1, [[OTHER, 1000]], [[ME, 546]])],
+      });
+      const el = open(`/address/${ME}`);
+      await until(() => expect(rows(el)).toHaveLength(1));
+      expect(poison(el)).toBeNull();
+      expect(live(el)).toBe("");
+    });
+
+    it("leads the page with a lookalike of its own address, shown whole, and says it once", async () => {
+      serve({
+        [`/address/${ME}`]: stats(part(2000, 0, 2)),
+        [`/address/${ME}/txs`]: [
+          tx(1, [[FAKE, 1000]], [[ME, 546]]),
+          tx(2, [[OTHER, 2000]], [[ME, 1454]]),
+        ],
+      });
+      const el = open(`/address/${ME}`);
+      await until(() => expect(poison(el)).not.toBeNull());
+      const notice = poison(el) as Element;
+      // Above the totals, outside the history's tabs.
+      expect(notice.nextElementSibling?.classList.contains("address-totals")).toBe(true);
+      expect(notice.closest(".address-history")).toBeNull();
+      expect(text(notice.querySelector("h2") as Element)).toBe(
+        "Someone may be imitating this address",
+      );
+      expect(text(notice)).toContain(
+        "1 of the 2 transactions in the history names an address that starts and ends like this one.",
+      );
+      expect(text(notice)).toContain(FAKE);
+      expect(text(notice)).toContain("Check every character, not just the ends");
+      // The whole history is loaded: it does not say older ones are unchecked.
+      expect(text(notice)).not.toContain("Older transactions");
+      const agree = [...notice.querySelectorAll(".lookalike__agree")].map((e) => text(e));
+      expect(agree).toStrictEqual(["w5", "f3t4", "w5", "f3t4"]);
+      expect(notice.querySelector("a, img, script")).toBeNull();
+      expect(button(el, "Go to the transaction")).toBeDefined();
+      expect(live(el)).toBe("Someone may be imitating this address");
+    });
+
+    it("counts only the pages loaded, and counts again as more load", async () => {
+      const first = Array.from({ length: 25 }, (_, i) =>
+        i === 3 ? tx(4, [[ME, 9000]], [[PAYEE, 8000]]) : tx(i + 1, [[OTHER, 2000]], [[ME, 1000]]),
+      );
+      first[0] = tx(1, [[FAKE, 1000]], [[ME, 546]]);
+      serve({
+        [`/address/${ME}`]: stats(part(30_000, 9000, 30)),
+        [`/address/${ME}/txs`]: first,
+        [`/address/${ME}/txs?after_txid=${txid(25)}`]: [
+          tx(26, [[FAKE_PAYEE, 1000]], [[ME, 546]]),
+          tx(27, [[OTHER, 1000]], [[ME, 546]]),
+        ],
+      });
+      const el = open(`/address/${ME}`);
+      await until(() => expect(poison(el)).not.toBeNull());
+      expect(text(poison(el) as Element)).toContain(
+        "1 of the 25 transactions loaded so far names an address that starts and ends like this one.",
+      );
+      expect(text(poison(el) as Element)).toContain(
+        "Older transactions are checked as you load them.",
+      );
+      button(el, "Show 25 more")?.click();
+      await until(() =>
+        expect(text(poison(el) as Element)).toContain(
+          "3 of the 27 transactions in the history name an address that starts and ends like this one, or like another address in this history.",
+        ),
+      );
+      // The second page was short, so the history has no more: said of the list, whatever the
+      // totals (30 here) say, and without the line about older transactions.
+      expect(text(poison(el) as Element)).not.toContain("Older transactions");
+      expect(button(el, "Go to the first of them")).toBeDefined();
+      // Announced when it appeared, and not again for the new count.
+      expect(live(el)).toBe("Someone may be imitating this address");
+    });
+
+    it("stops promising older transactions once a later page answers empty", async () => {
+      // Exactly one full page: only asking for more can tell there are none.
+      const first = Array.from({ length: 25 }, (_, i) => tx(i + 1, [[OTHER, 2000]], [[ME, 1000]]));
+      first[0] = tx(1, [[FAKE, 1000]], [[ME, 546]]);
+      serve({
+        [`/address/${ME}`]: stats(part(30_000, 9000, 25)),
+        [`/address/${ME}/txs`]: first,
+        [`/address/${ME}/txs?after_txid=${txid(25)}`]: [],
+      });
+      const el = open(`/address/${ME}`);
+      await until(() => expect(poison(el)).not.toBeNull());
+      expect(text(poison(el) as Element)).toContain("1 of the 25 transactions loaded so far");
+      button(el, "Show 25 more")?.click();
+      await until(() =>
+        expect(text(poison(el) as Element)).toContain("1 of the 25 transactions in the history"),
+      );
+      expect(text(poison(el) as Element)).not.toContain("Older transactions");
+      expect(button(el, "Show 25 more")).toBeUndefined();
+      // That answer came from the server, not the browser's cache: an old empty one would hide
+      // rows a reorg added.
+      expect(caching[calls.findIndex((c) => c.includes("after_txid"))]).toBe("no-cache");
+    });
+
+    it("names a lookalike of another address in the history without showing it", async () => {
+      serve({
+        [`/address/${ME}`]: stats(part(9000, 9000, 2)),
+        [`/address/${ME}/txs`]: [
+          tx(1, [[FAKE_PAYEE, 1000]], [[ME, 546]]),
+          tx(2, [[ME, 9000]], [[PAYEE, 8000]]),
+        ],
+      });
+      const el = open(`/address/${ME}`);
+      await until(() => expect(poison(el)).not.toBeNull());
+      const notice = poison(el) as Element;
+      expect(text(notice.querySelector("h2") as Element)).toBe(
+        "Lookalike addresses in this history",
+      );
+      expect(text(notice)).toContain(
+        "2 of the 2 transactions in the history name addresses that look like one another: one of each pair may have been made to imitate the other.",
+      );
+      expect(text(notice)).not.toContain(PAYEE);
+      expect(notice.querySelector(".lookalike__pair")).toBeNull();
+    });
+
+    it("goes to the first marked row from the unspent outputs view, and focuses its warning", async () => {
+      serve({
+        [`/address/${ME}`]: stats(part(2000, 0, 2)),
+        [`/address/${ME}/txs`]: [
+          tx(1, [[OTHER, 2000]], [[ME, 1454]]),
+          tx(2, [[FAKE, 1000]], [[ME, 546]]),
+        ],
+        [`/address/${ME}/utxo`]: [],
+        "/blocks/tip/height": () => new Response("110"),
+      });
+      const scrolled: Element[] = [];
+      Element.prototype.scrollIntoView = function scrollIntoView(this: Element) {
+        scrolled.push(this);
+      };
+      vi.stubGlobal("matchMedia", () => ({ matches: true }));
+      try {
+        const el = open(`/address/${ME}?view=unspent`);
+        await until(() => expect(poison(el)).not.toBeNull());
+        expect(el.querySelector(".address-txs")).toBeNull();
+        button(el, "Go to the transaction")?.click();
+        await until(() => expect(el.querySelector(".address-txs")).not.toBeNull());
+        const tab = el.querySelector("#address-tab-transactions");
+        expect(tab?.getAttribute("aria-selected")).toBe("true");
+        const warning = document.activeElement as Element;
+        expect(warning.id).toBe(`lookalike-${txid(2)}`);
+        // The row above the warning is brought into view, not the warning alone.
+        expect(scrolled[0]?.textContent).toContain(txid(2).slice(0, 8));
+      } finally {
+        delete (Element.prototype as Partial<Element>).scrollIntoView;
+      }
+    });
+  });
+});
+
 describe("balance chart", () => {
   const T = 1_794_000_000;
   const TIP = "e".repeat(64);
@@ -1191,6 +1504,29 @@ describe("balance chart", () => {
       await until(() => expect(el.querySelectorAll(".address-txs tbody tr")).toHaveLength(25));
       expect(el.querySelector("#address-history-title")?.textContent).toBe("Transactions");
       expect(text(el)).not.toContain("is getting this address's whole history");
+    });
+
+    it("counts a kept history's lookalikes as confirmed, and drops its notice with the history", async () => {
+      const fake = `bc1qw5${"q".repeat(32)}f3t4`;
+      let history = "whole";
+      serve({
+        [`/app/address/${ME}/ledger`]: () => Response.json(keptLedger(history)),
+        [`/address/${ME}`]: stats(part(150_000_000, 50_000_000, 1)),
+        [`/address/${ME}/txs/chain`]: [tx(1, [[fake, 1000]], [[ME, 546]])],
+        // One more waits, listed apart: the notice's count is of the confirmed list alone.
+        [`/address/${ME}/txs/mempool`]: [tx(2, [[OTHER, 6000]], [[ME, 5000]])],
+      });
+      const el = open(`/address/${ME}`);
+      await until(() => expect(el.querySelector(".address-poison")).not.toBeNull());
+      expect(text(el.querySelector(".address-poison") as Element)).toContain(
+        "The only confirmed transaction in the history names an address that starts and ends like this one.",
+      );
+      // The server drops the history: its rows go, and the notice that pointed at them with them.
+      history = "dropped";
+      heard({ state: "ledger", height: 900_001 });
+      await until(() => expect(text(el)).toContain("and is getting it again"));
+      expect(el.querySelector(".lookalike")).toBeNull();
+      expect(el.querySelector(".address-poison")).toBeNull();
     });
 
     it("says truthfully why it lists only the newest transactions", async () => {

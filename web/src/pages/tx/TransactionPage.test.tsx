@@ -2,8 +2,10 @@ import { createRouter, memoryHistory } from "@solidjs/router";
 import { render } from "@solidjs/web";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { clearApiCache } from "../../lib/api";
+import { clearSummaries } from "../../lib/summary";
 import type { Outspend, Transaction, TxStatus } from "../../lib/esplora";
 import { fakeBlock, FakeSocket } from "../../lib/fakes";
+import { handoverState, type Lookalike } from "../../lib/lookalike";
 import TransactionPage, { POLL_MS } from "./TransactionPage";
 
 const TXID = "d1d7cf2b9189a07521354c5d5012c3147d9825596b6ec6cc3100904f0785fcfe";
@@ -48,6 +50,9 @@ const payment = (status: TxStatus): Transaction => ({
 
 type Reply = { status: number; body: unknown } | (() => { status: number; body: unknown });
 let replies: Record<string, Reply>;
+/** The chain tip height each reply is stamped with, per URL; the rest say {@link TIP}. */
+let tips: Record<string, number> = {};
+const TIP = 975_518;
 const fetchMock = vi.fn<(url: string) => Promise<Response>>(async (url) => {
   const r = replies[url];
   const reply =
@@ -55,13 +60,19 @@ const fetchMock = vi.fn<(url: string) => Promise<Response>>(async (url) => {
   const text = typeof reply.body === "string" ? reply.body : JSON.stringify(reply.body);
   return new Response(text, {
     status: reply.status,
-    headers: { "cache-control": "public, max-age=1" },
+    headers: {
+      "cache-control": "public, max-age=1",
+      "x-bitcoin-chain-tip": "00".repeat(32),
+      "x-bitcoin-chain-tip-height": String(tips[url] ?? TIP),
+    },
   });
 });
 
 const disposers: (() => void)[] = [];
 beforeEach(() => {
   clearApiCache();
+  clearSummaries();
+  tips = {};
   fetchMock.mockClear();
   vi.stubGlobal("fetch", fetchMock);
   FakeSocket.all = [];
@@ -74,8 +85,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function page(path: string): HTMLElement {
-  const history = memoryHistory(path);
+/** The page at `path`, its history entry carrying `state` as a link's navigation would. */
+function page(path: string, state?: unknown): HTMLElement {
+  const memory = memoryHistory(path);
+  const history =
+    state === undefined
+      ? memory
+      : {
+          ...memory,
+          get: () => ({ value: memory.get(), state: memory.get() === path ? state : undefined }),
+        };
   const Router = createRouter({
     routes: [{ path: ["/tx/:txid", "/regtest/tx/:txid"], component: TransactionPage }],
     history,
@@ -170,6 +189,144 @@ describe("TransactionPage", () => {
     expect(outs[0]?.querySelector("a.tx-flow__spent")?.getAttribute("href")).toBe(`/tx/${SPENDER}`);
     expect(text(outs[1] as Element)).toContain("Unspent");
     expect(el.querySelector('.tx-flow__col--out a[href="/address/bc1qpay"]')).not.toBeNull();
+  });
+
+  it("says how a mined rate compares with its block's low end, and nothing when it cannot", async () => {
+    const OTHER = "00000000000000000000e13ad5e424f6ba7208b0c1a9a687e9ccc4d62b3b094c";
+    const summaryUrl = `/app/blocks/summary?hashes=${BLOCK}`;
+    const blockSummary = (p10: number | null) => [
+      {
+        id: BLOCK,
+        height: 975_516,
+        tx_count: 3,
+        fees: 500,
+        vsize: 400,
+        weight: 1600,
+        fee_rate:
+          p10 === null ? null : { min: 0, p10, p25: 0.2, median: 1, p75: 2, p90: 3, max: 9 },
+        fee_bands: Array.from({ length: 12 }, () => 0),
+      },
+    ];
+    const show = async (p10: number | null, parentIn: string) => {
+      document.body.replaceChildren();
+      clearSummaries();
+      clearApiCache();
+      serve(payment(confirmed), [{ spent: false }, { spent: false }]);
+      replies[summaryUrl] = { status: 200, body: blockSummary(p10) };
+      replies[api(`/tx/${SPENDER}/status`)] = {
+        status: 200,
+        body: { ...confirmed, block_hash: parentIn },
+      };
+      const el = page(`/tx/${TXID}`);
+      await settle();
+      return el.querySelector(".tx-answer__cell--fee .tx-verdict .note-figure");
+    };
+
+    // 1.00 sat/vB against a low end of 0.12: rounded down, and its note says what the figure is.
+    const above = await show(0.12, OTHER);
+    expect(text(above as Element)).toContain("8.3× the low end");
+    const button = above;
+    const said = document.getElementById(button?.getAttribute("aria-describedby") ?? "");
+    expect(text(said as Element)).toBe(
+      "8.3 times its block's low end. The cheapest tenth of block 975 516, by size, paid 0.12 sat/vB or less. Compared with this transaction's own rate.",
+    );
+    expect(text((await show(0.6, OTHER)) as Element)).toContain("Near the low end");
+    // Its parent mined in the same block: it may have paid for it, so no verdict.
+    await expect(show(0.12, BLOCK)).resolves.toBeNull();
+    // At the low end holds whatever the parent: a package's rate would be lower still.
+    expect(text((await show(1, BLOCK)) as Element)).toContain("At the low end");
+    // A block without rates, or whose cheapest tenth paid nothing.
+    await expect(show(null, OTHER)).resolves.toBeNull();
+    await expect(show(0, OTHER)).resolves.toBeNull();
+  });
+
+  it("asks the spends again when they were answered before its block, and trusts no older answer", async () => {
+    const summaryUrl = `/app/blocks/summary?hashes=${BLOCK}`;
+    const spendsUrl = api(`/tx/${TXID}/outspends`);
+    const summary = [
+      {
+        id: BLOCK,
+        height: 975_516,
+        tx_count: 3,
+        fees: 500,
+        vsize: 400,
+        weight: 1600,
+        fee_rate: { min: 0, p10: 0.12, p25: 0.2, median: 1, p75: 2, p90: 3, max: 9 },
+        fee_bands: Array.from({ length: 12 }, () => 0),
+      },
+    ];
+    const elsewhere = { ...confirmed, block_hash: "11".repeat(32), block_height: 975_000 };
+    // The spends were answered a block before its own; asked again, a child mined beside it shows.
+    serve(payment(confirmed));
+    replies[summaryUrl] = { status: 200, body: summary };
+    replies[api(`/tx/${SPENDER}/status`)] = { status: 200, body: elsewhere };
+    let asked = 0;
+    replies[spendsUrl] = () => {
+      asked += 1;
+      tips[spendsUrl] = asked === 1 ? 975_515 : TIP;
+      return {
+        status: 200,
+        body:
+          asked === 1
+            ? [{ spent: false }]
+            : [{ spent: true, txid: SPENDER, vin: 0, status: confirmed }],
+      };
+    };
+    const el = page(`/tx/${TXID}`);
+    await settle();
+    expect(asked).toBe(2);
+    expect(el.querySelector(".tx-verdict .note-figure")).toBeNull();
+
+    // Spends answered while another block held it at the same height (a reorg since) say nothing
+    // of this block either: the transaction's own answer names the block they belong to.
+    document.body.replaceChildren();
+    clearSummaries();
+    clearApiCache();
+    serve({ ...payment(confirmed), status: { ...confirmed, block_hash: "22".repeat(32) } });
+    replies[api(`/tx/${TXID}/status`)] = { status: 200, body: confirmed };
+    replies[summaryUrl] = { status: 200, body: summary };
+    replies[api(`/tx/${SPENDER}/status`)] = { status: 200, body: elsewhere };
+    asked = 0;
+    replies[spendsUrl] = () => {
+      asked += 1;
+      return { status: 200, body: [{ spent: false }] };
+    };
+    const moved = page(`/tx/${TXID}`);
+    await settle();
+    FakeSocket.last().hello({ network: "mainnet" });
+    FakeSocket.last().receive(msg({ state: "confirmed", height: 975_516, hash: BLOCK }));
+    await settle();
+    expect(asked).toBeGreaterThan(1);
+    expect(text(moved.querySelector(".tx-verdict") as Element)).toContain("8.3× the low end");
+
+    // A parent's status from before the block proves nothing about where it was mined.
+    document.body.replaceChildren();
+    clearSummaries();
+    clearApiCache();
+    serve(payment(confirmed), [{ spent: false }]);
+    replies[summaryUrl] = { status: 200, body: summary };
+    replies[api(`/tx/${SPENDER}/status`)] = { status: 200, body: elsewhere };
+    tips[api(`/tx/${SPENDER}/status`)] = 975_515;
+    const old = page(`/tx/${TXID}`);
+    await settle();
+    expect(old.querySelector(".tx-verdict .note-figure")).toBeNull();
+    // Its line is kept all the same, so a verdict arriving would move nothing.
+    expect(old.querySelector(".tx-verdict")).not.toBeNull();
+  });
+
+  it("asks for no block summary for a coinbase or an unconfirmed transaction", async () => {
+    const coinbase: Transaction = {
+      ...payment(confirmed),
+      vin: [{ txid: "00".repeat(32), vout: 0xffffffff, is_coinbase: true, scriptsig: "03" }],
+    };
+    serve(coinbase, [{ spent: false }]);
+    page(`/tx/${TXID}`);
+    await settle();
+    serve(payment({ confirmed: false }), [{ spent: false }]);
+    page(`/tx/${TXID}`);
+    await settle();
+    expect(fetchMock.mock.calls.some(([url]) => url.includes("/summary"))).toBe(false);
+    expect(document.querySelector(".tx-verdict")).toBeNull();
   });
 
   it("names a coinbase as what it is", async () => {
@@ -792,6 +949,288 @@ describe("TransactionPage", () => {
     expect(rail.classList).not.toContain("tx-rail--open");
   });
 
+  it("compares a confirmed replacement opened fresh, however long ago it confirmed", async () => {
+    const OLD = "e".repeat(64);
+    serve(payment(confirmed));
+    replies[`/app/tx/${TXID}/replacements`] = {
+      status: 200,
+      body: {
+        txid: TXID,
+        truncated: false,
+        replaced_by: [],
+        replaces: [{ txid: OLD, by: TXID, rate: 500, by_rate: 1000, shared_inputs: 1 }],
+        versions: [OLD, TXID],
+      },
+    };
+    const v = (txid: string) => ({
+      txid,
+      fee: 141,
+      vsize: 141,
+      outputs: { state: "not_recorded" },
+    });
+    replies[`/app/tx/${OLD}/compare/${TXID}`] = {
+      status: 200,
+      body: { a: v(OLD), b: v(TXID), shared_inputs: 1 },
+    };
+    // Thousands of blocks deep: the record holds links by count, not by age.
+    const saved = { ...replies };
+    serve(payment(confirmed), [], "985000");
+    Object.assign(replies, {
+      [`/app/tx/${TXID}/replacements`]: saved[`/app/tx/${TXID}/replacements`],
+      [`/app/tx/${OLD}/compare/${TXID}`]: saved[`/app/tx/${OLD}/compare/${TXID}`],
+    });
+    // Settled: the page follows nothing live, so it opens no socket, and asks all the same.
+    const el = page(`/tx/${TXID}`);
+    await vi.waitFor(async () => {
+      await settle();
+      expect(el.querySelector(".tx-versions .tx-compare__figures")).not.toBeNull();
+    });
+    expect(text(el.querySelector(".tx-versions") as Element)).toContain("Version 2, this page");
+  });
+
+  it("asks again when replaced, and offers no comparison for a child that left with its parent", async () => {
+    const PARENT_REPLACEMENT = "f".repeat(64);
+    serve(payment({ confirmed: false }));
+    const el = page(`/tx/${TXID}`);
+    await settle();
+    const ws = FakeSocket.last();
+    ws.hello({ network: "mainnet" });
+    ws.receive(mempoolMsg(0));
+    await settle();
+    const asked = () =>
+      fetchMock.mock.calls.filter(([u]) => u === `/app/tx/${TXID}/replacements`).length;
+    const before = asked();
+    // Its parent is replaced and it leaves too: the topic's link says nothing of how.
+    replies[`/app/tx/${TXID}/replacements`] = {
+      status: 200,
+      body: {
+        txid: TXID,
+        truncated: false,
+        replaced_by: [{ txid: TXID, by: PARENT_REPLACEMENT, shared_inputs: 0 }],
+        replaces: [],
+        versions: [],
+      },
+    };
+    ws.receive(
+      msg({ state: "replaced", truncated: false, chain: [{ txid: TXID, by: PARENT_REPLACEMENT }] }),
+    );
+    await vi.waitFor(async () => {
+      await settle();
+      expect(asked()).toBe(before + 1);
+      expect(text(el)).toContain("Removed with a replaced transaction");
+    });
+    expect(el.querySelector(".tx-compare")).toBeNull();
+    expect(el.querySelector(".tx-chain__compare")).toBeNull();
+    // Every place the page spoke of a replacement now says what happened to a child: the badge,
+    // the notice, its line, the steps and the details. Nothing calls it a version or replaced.
+    expect(el.querySelector(".tx-status")?.textContent).toBe("Removed");
+    const said = text(el.querySelector(".tx-notice") as Element);
+    expect(said).toContain(
+      "It left the mempool when ffffffff…ffffffff replaced a transaction it depended on. No new version of this transaction took its place. It can still confirm only if the replaced transaction is mined after all.",
+    );
+    expect(said).toContain(
+      "This transactionremoved when ffffffff…ffffffff replaced a transaction it depended on",
+    );
+    expect(said).toContain("Follow ffffffff…ffffffff, the newest in this line.");
+    expect(said).not.toContain("the newest version");
+    expect(said).not.toContain("This version");
+    expect(said).not.toContain("spending the same coins took its place");
+    // Said once: the notice's own words, not the line's again.
+    expect(said).not.toContain("not replaced by a new version of itself");
+    const whole = text(el);
+    expect(whole).toContain("Removed with its parentWhen ffffffff…ffffffff replaced");
+    expect(whole).toContain(
+      "Unless the transaction it depended on is mined after all, in place of what replaced it.",
+    );
+    expect(whole).not.toContain("no longer exist");
+    expect(whole).toContain("No: it was removed with its parent");
+    // Nowhere does it promise what a miner may still undo.
+    expect(whole).toContain("Not expected to confirm");
+    expect(whole).not.toContain("Will not confirm");
+    // The topic spoke first and said "replaced": the route's word is announced after it.
+    expect(text(el.querySelector("p[aria-live=polite]") as Element)).toBe(
+      "Not replaced itself: it left the mempool with a transaction it depended on, which was replaced.",
+    );
+    expect(whole).not.toContain("the version that replaced it");
+    expect(whole).not.toContain("No: it was replaced");
+
+    // What replaced its parent is replaced in turn, and the ask that follows fails: the page
+    // keeps that its own link is a child's, so it still reads as removed, never as replaced twice.
+    const NEWER = "9".repeat(64);
+    replies[`/app/tx/${TXID}/replacements`] = { status: 500, body: { error: "down" } };
+    ws.receive(
+      msg({
+        state: "replaced",
+        truncated: false,
+        chain: [
+          { txid: TXID, by: PARENT_REPLACEMENT },
+          { txid: PARENT_REPLACEMENT, by: NEWER },
+        ],
+      }),
+    );
+    await vi.waitFor(async () => {
+      await settle();
+      expect(asked()).toBe(before + 2);
+      expect(text(el)).toContain("99999999…99999999");
+    });
+    expect(el.querySelector(".tx-status")?.textContent).toBe("Removed");
+    const later = text(el.querySelector(".tx-notice") as Element);
+    expect(later).toContain("Removed with a replaced transaction");
+    // A line with a child's link in it is not a line of versions.
+    expect(later).not.toContain("It was replaced 2 times");
+    expect(later).not.toContain("Each version spends the same coins");
+    expect(later).toContain("Follow 99999999…99999999, the newest in this line.");
+    // The second link is not known to be a child's: it reads as a replacement.
+    expect(later).toContain("ffffffff…ffffffffreplaced by 99999999…99999999");
+    expect(text(el.querySelector("p[aria-live=polite]") as Element)).toBe(
+      "The line of transactions it left with changed: 2 links now, the newest 99999999.",
+    );
+
+    // The line goes on again, and this time the route answers, but its bounded record has let
+    // the child's own link go: it says nothing of it. What it said before still stands.
+    const NEWEST = "8".repeat(64);
+    replies[`/app/tx/${TXID}/replacements`] = {
+      status: 200,
+      body: { txid: TXID, truncated: false, replaced_by: [], replaces: [], versions: [] },
+    };
+    ws.receive(
+      msg({
+        state: "replaced",
+        truncated: false,
+        chain: [
+          { txid: TXID, by: PARENT_REPLACEMENT },
+          { txid: PARENT_REPLACEMENT, by: NEWER },
+          { txid: NEWER, by: NEWEST },
+        ],
+      }),
+    );
+    await vi.waitFor(async () => {
+      await settle();
+      expect(asked()).toBe(before + 3);
+      expect(text(el)).toContain("88888888…88888888");
+    });
+    expect(el.querySelector(".tx-status")?.textContent).toBe("Removed");
+    expect(text(el.querySelector(".tx-notice") as Element)).toContain(
+      "Removed with a replaced transaction",
+    );
+    expect(text(el.querySelector("p[aria-live=polite]") as Element)).toBe(
+      "The line of transactions it left with changed: 3 links now, the newest 88888888.",
+    );
+  });
+
+  it("asks again when a reorg sends a confirmed transaction back and it is then replaced", async () => {
+    const NEWER = "f".repeat(64);
+    // One confirmation deep, so the page still follows it.
+    serve(payment(confirmed), [], "975516");
+    const el = page(`/tx/${TXID}`);
+    await settle();
+    const ws = FakeSocket.last();
+    ws.hello({ network: "mainnet" });
+    await settle();
+    const asked = () =>
+      fetchMock.mock.calls.filter(([u]) => u === `/app/tx/${TXID}/replacements`).length;
+    // A reorg returns it to the mempool, and a new version replaces it there.
+    replies[api(`/tx/${TXID}/status`)] = { status: 200, body: { confirmed: false } };
+    ws.receive(mempoolMsg(0));
+    await settle();
+    const before = asked();
+    replies[`/app/tx/${TXID}/replacements`] = {
+      status: 200,
+      body: {
+        txid: TXID,
+        truncated: false,
+        replaced_by: [{ txid: TXID, by: NEWER, shared_inputs: 1 }],
+        replaces: [],
+        versions: [TXID, NEWER],
+      },
+    };
+    ws.receive(msg({ state: "replaced", truncated: false, chain: [{ txid: TXID, by: NEWER }] }));
+    await vi.waitFor(async () => {
+      await settle();
+      expect(asked()).toBe(before + 1);
+      expect(el.querySelector(".tx-chain__compare")).not.toBeNull();
+    });
+  });
+
+  it("says a change again when it is worded like the one before it", async () => {
+    const [A, B, C] = ["a".repeat(64), "b".repeat(64), "c".repeat(64)];
+    serve(payment({ confirmed: false }));
+    const el = page(`/tx/${TXID}`);
+    await settle();
+    const ws = FakeSocket.last();
+    ws.hello({ network: "mainnet" });
+    ws.receive(mempoolMsg(0));
+    await settle();
+    const region = () => el.querySelector("p[aria-live=polite]")?.textContent;
+    const chain = (...by: string[]) =>
+      msg({
+        state: "replaced",
+        truncated: false,
+        chain: by.map((b, i) => ({ txid: i === 0 ? TXID : (by[i - 1] ?? TXID), by: b })),
+      });
+    ws.receive(chain(A));
+    await settle();
+    ws.receive(chain(A, B));
+    await settle();
+    expect(region()).toBe("Its replacement was replaced too.");
+    // The same sentence for the next one: the region's text changes all the same, by a space no
+    // screen reader reads, so it is said a second time.
+    ws.receive(chain(A, B, C));
+    await settle();
+    expect(region()).toBe("Its replacement was replaced too.\u00A0");
+  });
+
+  it("never forgets that the link it shows is a child's, however many others it learns", async () => {
+    const PARENT_REPLACEMENT = "f".repeat(64);
+    const others = (from: number) =>
+      Array.from({ length: 32 }, (_, i) => ({
+        txid: (from + i).toString(16).padStart(64, "0"),
+        by: (from + i + 1000).toString(16).padStart(64, "0"),
+        shared_inputs: 0,
+      }));
+    const answer = (links: object[]) => ({
+      status: 200,
+      body: { txid: TXID, truncated: false, replaced_by: links, replaces: [], versions: [] },
+    });
+    serve(payment({ confirmed: false }));
+    const el = page(`/tx/${TXID}`);
+    await settle();
+    const ws = FakeSocket.last();
+    ws.hello({ network: "mainnet" });
+    ws.receive(mempoolMsg(0));
+    await settle();
+    const own = { txid: TXID, by: PARENT_REPLACEMENT };
+    const leaves = (...more: { txid: string; by: string }[]) =>
+      ws.receive(msg({ state: "replaced", truncated: false, chain: [own, ...more] }));
+    const badge = () => el.querySelector(".tx-status")?.textContent;
+    // The route says its own link is a child's, among others.
+    replies[`/app/tx/${TXID}/replacements`] = answer([
+      { ...own, shared_inputs: 0 },
+      ...others(1).slice(1),
+    ]);
+    leaves();
+    await vi.waitFor(async () => {
+      await settle();
+      expect(badge()).toBe("Removed");
+    });
+    // Its line goes on, and the route now lists thirty-two other child links and not this one.
+    replies[`/app/tx/${TXID}/replacements`] = answer(others(100));
+    leaves({ txid: PARENT_REPLACEMENT, by: "9".repeat(64) });
+    await vi.waitFor(async () => {
+      await settle();
+      expect(text(el)).toContain("99999999…99999999");
+    });
+    expect(badge()).toBe("Removed");
+    // And then the route fails: the page has only what it remembers, the shown link among it.
+    replies[`/app/tx/${TXID}/replacements`] = { status: 500, body: { error: "down" } };
+    leaves({ txid: PARENT_REPLACEMENT, by: "8".repeat(64) });
+    await vi.waitFor(async () => {
+      await settle();
+      expect(text(el)).toContain("88888888…88888888");
+    });
+    expect(badge()).toBe("Removed");
+  });
+
   it("names what it replaced in the details", async () => {
     const OLD = "e".repeat(64);
     serve(payment({ confirmed: false }));
@@ -867,5 +1306,160 @@ describe("TransactionPage", () => {
       '<img src=x onerror="alert(1)">\\u{202e}',
     );
     expect(el.querySelector("img")).toBeNull();
+  });
+});
+
+describe("a lookalike handed over from an address page", () => {
+  // The regtest browser test's addresses (e2e/lookalike.mine.e2e.ts): real checksums.
+  const VICTIM = "bcrt1q92tjde2x93754htnwfj50zh9g2dmx39f5kmmx6";
+  const LOOKALIKE = "bcrt1q92tjvp70h8qk3ma6v7u4cnyqkffq94gvfsmmx6";
+  const found: Lookalike = {
+    here: LOOKALIKE,
+    like: VICTIM,
+    own: true,
+    head: 4,
+    tail: 4,
+    prefix: 6,
+  };
+  const poisoning = (): Transaction => ({
+    ...payment(confirmed),
+    vout: [out(600, P2WPKH, VICTIM), out(600, P2WPKH, LOOKALIKE)],
+  });
+  const handed = (f: Lookalike[] = [found]) =>
+    JSON.parse(handoverState(VICTIM, f, TXID, "mainnet")) as unknown;
+  const marked = (el: Element) => el.querySelectorAll(".tx-flow__item--lookalike");
+
+  it("warns at the top, marks the address on its card and in the inspector, and says it once", async () => {
+    serve(poisoning());
+    const el = page(`/tx/${TXID}`, handed());
+    await settle();
+    const notice = el.querySelector("section.tx-lookalike") as Element;
+    expect(text(notice.querySelector("h2") as Element)).toBe(
+      "Someone may be imitating the address you came from",
+    );
+    expect(text(notice)).toContain(
+      "This transaction names an address that starts and ends like the address you came from.",
+    );
+    expect(text(notice)).toContain("Check every character, not just the ends");
+    expect(text(notice)).toContain("may be address poisoning");
+    expect(text(notice)).toContain("this page does not look for lookalikes itself");
+    // Both whole, their agreeing ends marked, and where they agree said aloud.
+    const agree = [...notice.querySelectorAll(".lookalike__agree")].map((e) => text(e));
+    expect(agree).toStrictEqual(["92tj", "mmx6", "92tj", "mmx6"]);
+    expect(text(notice)).toContain(LOOKALIKE);
+    expect(text(notice)).toContain(VICTIM);
+    expect(text(notice)).toContain("agree on the first 4 and last 4 characters after bcrt1q");
+    // Screen readers hear the heading once, from its own polite region.
+    const regions = [...el.querySelectorAll("p[aria-live=polite]")].map((p) => text(p));
+    expect(regions).toContain("Someone may be imitating the address you came from");
+
+    // On the card that names it, in words, and on no other.
+    const cards = el.querySelectorAll(".tx-flow__col--out .tx-flow__item");
+    expect(marked(el)).toHaveLength(1);
+    expect(marked(el)[0]).toBe(cards[1]);
+    expect(text(cards[1] as Element)).toContain("Lookalike address: check every character");
+    expect(text(cards[0] as Element)).not.toContain("Lookalike");
+
+    // Its inspector shows it whole, marked, and its copy button says what it copies.
+    cards[1]?.querySelector<HTMLButtonElement>(".tx-flow__open")?.click();
+    await settle();
+    const inspector = el.querySelector("#tx-inspector") as Element;
+    expect(inspector.querySelector(".tx-lookalike-addr a")?.getAttribute("href")).toBe(
+      `/address/${LOOKALIKE}`,
+    );
+    expect(inspector.querySelector('button[title="Copy lookalike address"]')).not.toBeNull();
+    expect(text(inspector)).toContain("it starts and ends like the address you came from");
+    expect(text(inspector)).toContain(VICTIM);
+    // The other output's address is as it always was.
+    cards[0]?.querySelector<HTMLButtonElement>(".tx-flow__open")?.click();
+    await settle();
+    const other = el.querySelector("#tx-inspector") as Element;
+    expect(other.querySelector(".tx-lookalike-addr, .tx-lookalike-note")).toBeNull();
+    expect(other.querySelector('button[title="Copy address"]')).not.toBeNull();
+  });
+
+  it("announces what the entry shows: cleared when its notice goes, said again when it returns", async () => {
+    serve(poisoning());
+    // A history that keeps each entry's state, as the browser's does, and goes back through it.
+    const entries: { value: string; state?: unknown }[] = [
+      { value: `/tx/${TXID}`, state: handed() },
+    ];
+    let at = 0;
+    const listeners: ((e: { value: string; state?: unknown }) => void)[] = [];
+    const history = {
+      get: () => entries[at] ?? { value: "/" },
+      set: ({ value, state }: { value: string; state?: unknown }) => {
+        entries.splice(++at, entries.length, { value, state });
+      },
+      go: (n: number) => {
+        at = Math.max(0, Math.min(at + n, entries.length - 1));
+        for (const l of listeners) l(entries[at] ?? { value: "/" });
+      },
+      back: () => history.go(-1),
+      forward: () => history.go(1),
+      listen: (l: (e: { value: string; state?: unknown }) => void) => {
+        listeners.push(l);
+        return () => listeners.splice(listeners.indexOf(l), 1);
+      },
+      init: (l: (e: { value: string; state?: unknown }) => void) => history.listen(l),
+      utils: { go: (n: number) => history.go(n) },
+    };
+    const Router = createRouter({
+      routes: [{ path: "/tx/:txid", component: TransactionPage }],
+      history,
+    });
+    const el = document.createElement("div");
+    document.body.append(el);
+    disposers.push(render(() => <Router>{(route) => route.children}</Router>, el));
+    await settle();
+    const said = () => text(el.querySelectorAll("p[aria-live=polite]")[1] as Element);
+    const TITLE = "Someone may be imitating the address you came from";
+    expect(el.querySelector("section.tx-lookalike")).not.toBeNull();
+    expect(said()).toBe(TITLE);
+
+    // The same URL through the router, with no state: the notice goes, and so does what is said.
+    const link = document.createElement("a");
+    link.href = `/tx/${TXID}`;
+    el.append(link);
+    link.click();
+    await settle();
+    expect(entries).toHaveLength(2);
+    expect(el.querySelector("section.tx-lookalike")).toBeNull();
+    expect(said()).toBe("");
+
+    // Back to the entry that carried it: the notice returns, and is said again.
+    history.back();
+    await settle();
+    expect(el.querySelector("section.tx-lookalike")).not.toBeNull();
+    expect(said()).toBe(TITLE);
+  });
+
+  it("says nothing for the same transaction opened any other way", async () => {
+    serve(poisoning());
+    const el = page(`/tx/${TXID}`);
+    await settle();
+    expect(el.querySelector(".tx-flow__item")).not.toBeNull();
+    expect(el.querySelector(".tx-lookalike, .tx-lookalike-tag, .lookalike__address")).toBeNull();
+    expect(marked(el)).toHaveLength(0);
+    const regions = [...el.querySelectorAll("p[aria-live=polite]")].map((p) => text(p));
+    expect(regions.join("")).not.toContain("imitating");
+  });
+
+  it("says nothing when what it was handed is not of this transaction, or malformed", async () => {
+    for (const state of [
+      // A lookalike this transaction does not name.
+      handed([{ ...found, here: "bcrt1q92tjqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmmx6" }]),
+      { lookalike: { from: VICTIM, found: "everything", count: 1 } },
+      { lookalike: "<b>hi</b>" },
+    ]) {
+      serve(poisoning());
+      const el = page(`/tx/${TXID}`, state);
+      await settle();
+      expect(el.querySelector(".tx-flow__item")).not.toBeNull();
+      expect(el.querySelector(".tx-lookalike, .tx-lookalike-tag")).toBeNull();
+      for (const d of disposers.splice(0)) d();
+      document.body.replaceChildren();
+      clearApiCache();
+    }
   });
 });

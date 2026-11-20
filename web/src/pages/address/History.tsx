@@ -1,5 +1,14 @@
 import { useSearchParams } from "@solidjs/router";
-import { createMemo, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  onCleanup,
+  Show,
+  Switch,
+} from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { Amount } from "../../components/Amount";
 import "../../components/Button.css";
@@ -15,6 +24,7 @@ import type { AddressStats, Transaction, Utxo } from "../../lib/esplora";
 import { groupDigits, MISSING } from "../../lib/format";
 import { NETWORK_NAMES, paths } from "../../lib/network";
 import { useNetwork } from "../../lib/page";
+import { steady } from "../../lib/steady";
 import {
   confirmations,
   isCoinbase,
@@ -26,6 +36,9 @@ import {
   sortUtxos,
   txFeeRate,
 } from "./address";
+import { handoverState } from "../../lib/lookalike";
+import type { Lookalike } from "./lookalike";
+import { LookalikeWarning } from "./LookalikeWarning";
 import { Skeleton, settled, UnconfirmedMark } from "./parts";
 
 /** Confirmed transactions per page of address history; the first page adds the unconfirmed ones. */
@@ -51,13 +64,18 @@ const plural = (n: number, one: string, many: string) =>
  * the URL (`?view=unspent`), so a link or a reload opens the same one. Loaded pages survive a
  * switch between views.
  */
-/** The pages after the first, whether the last of them was full, and which rows are new. */
+/**
+ * The pages after the first, whether the last of them was full, whether one has answered since
+ * the first page last changed (an empty answer adds no rows, and still says there are no more),
+ * and which rows are new.
+ */
 interface Later {
   txs: Transaction[];
   full: boolean;
+  answered: boolean;
   fresh: ReadonlySet<string>;
 }
-const NOTHING_LATER: Later = { txs: [], full: true, fresh: new Set() };
+const NOTHING_LATER: Later = { txs: [], full: true, answered: false, fresh: new Set() };
 
 export function History(props: {
   address: string;
@@ -75,6 +93,13 @@ export function History(props: {
    * listed apart.
    */
   kept?: boolean;
+  /** Lookalike addresses by txid, worked out by the page from what this section reports loaded. */
+  lookalike: ReadonlyMap<string, readonly Lookalike[]>;
+  /**
+   * Hands the page every transaction loaded, first page and later ones, and whether more could be
+   * loaded, whenever either changes; and nothing once this section is gone.
+   */
+  onShown: (txs: Transaction[] | undefined, more: boolean) => void;
 }) {
   const network = useNetwork();
   const path = `/address/${encodeURIComponent(props.address)}`;
@@ -148,6 +173,8 @@ export function History(props: {
     const next: Later = {
       txs: old ? keptAfterRefresh(f, mergePages(old, prev.txs), PAGE) : prev.txs,
       full: old && prev.txs.length === 0 ? pageIsFull(old, PAGE) : prev.full,
+      // A changed first page may have more after it again.
+      answered: false,
       fresh: new Set(old ? [...ids].filter((id) => !known.has(id)) : []),
     };
     known = new Set([...known, ...ids]);
@@ -156,11 +183,28 @@ export function History(props: {
   });
   const later = () => after().txs;
   const fresh = () => after().fresh;
+  // The object already held for a transaction whose answer has not changed, so the table, which
+  // keeps a row's elements while it is given the same object, rebuilds no row but those that
+  // changed: the reader keeps their focus, the row under their finger and a note they were sent
+  // to. Compared whole, so a field a later answer changed (a block, a pruned input) is never
+  // hidden behind the old object.
+  const steadyTxs = steady<Transaction>((t) => t.txid);
   const shown = createMemo(() => {
     const f = first();
-    return f ? mergePages(f, later()) : undefined;
+    return f ? steadyTxs(mergePages(f, later())) : undefined;
   });
-  const hasNext = () => (later().length === 0 ? pageIsFull(first() ?? [], PAGE) : after().full);
+  // The page works out the lookalikes over every loaded page at once (its notice and these rows read
+  // the one answer), so a later page's lookalike also marks the earlier rows it imitates.
+  const hasNext = () =>
+    later().length === 0 && !after().answered ? pageIsFull(first() ?? [], PAGE) : after().full;
+  createEffect(
+    () => [shown(), hasNext()] as const,
+    ([list, more]) => {
+      props.onShown(list, more);
+    },
+  );
+  // A notice must not outlive the rows it points at (a kept history the server dropped, say).
+  onCleanup(() => props.onShown(undefined, false));
 
   const loadMore = async () => {
     if (!shown()?.at(-1) || loadingMore()) return;
@@ -176,13 +220,20 @@ export function History(props: {
           props.kept === true
             ? `${path}/txs/chain/${encodeURIComponent(last.txid)}`
             : `${path}/txs?after_txid=${encodeURIComponent(last.txid)}`,
-          { signal: controller.signal },
+          // Past the browser's cache: an empty answer says the history has no more, so one kept
+          // from before a reorg must not say it for the chain that followed.
+          { signal: controller.signal, fresh: true },
         );
         // A refresh while this was in flight may have changed the history it continues (new
         // transactions, a reorg), so the reply could leave a gap or bring back stale rows: it is
         // dropped, and the next page is asked for after the rows the refresh left.
         if (generation === asked) {
-          setAfter((a) => ({ ...a, txs: [...a.txs, ...page], full: pageIsFull(page, PAGE) }));
+          setAfter((a) => ({
+            ...a,
+            txs: [...a.txs, ...page],
+            full: pageIsFull(page, PAGE),
+            answered: true,
+          }));
           break;
         }
       }
@@ -286,6 +337,7 @@ export function History(props: {
               shown={shown()}
               total={total()}
               rowClass={(tx) => (tx && fresh().has(tx.txid) ? "address-row--new" : undefined)}
+              lookalike={props.lookalike}
               more={
                 <Show when={shown()}>
                   <div class="address-more">
@@ -357,9 +409,16 @@ function Transactions(props: {
   shown: Transaction[] | undefined;
   total: number | undefined;
   rowClass: (tx: Transaction | null) => string | undefined;
+  /** Lookalike addresses by txid (lookalike.ts); a row in it carries a warning. */
+  lookalike: ReadonlyMap<string, readonly Lookalike[]>;
   more: JSX.Element;
 }) {
   const network = useNetwork();
+  // A row that names a lookalike hands its findings to the transaction page in history state.
+  const handover = (tx: Transaction | null) => {
+    const found = tx && props.lookalike.get(tx.txid);
+    return found ? handoverState(props.address, found, tx.txid, network()) : undefined;
+  };
   const columns: Column<Transaction | null>[] = [
     {
       header: "Time",
@@ -371,7 +430,13 @@ function Transactions(props: {
       cell: (tx) =>
         tx ? (
           <span class="address-txcell">
-            <Hash value={tx.txid} href={paths.tx(tx.txid)} copyLabel="Copy transaction ID" fit />
+            <Hash
+              value={tx.txid}
+              href={paths.tx(tx.txid)}
+              linkState={handover(tx)}
+              copyLabel="Copy transaction ID"
+              fit
+            />
             {/* Phones drop the time column, so the time moves under the txid. */}
             <span class="address-txcell__when">
               <When tx={tx} />
@@ -436,7 +501,17 @@ function Transactions(props: {
             columns={columns}
             rows={props.shown ?? placeholders(props.total)}
             rowHref={(t) => (t ? paths.tx(t.txid) : undefined)}
+            rowState={handover}
             rowClass={props.rowClass}
+            rowNote={{
+              when: (t) => t !== null && props.lookalike.has(t.txid),
+              render: (t) => (
+                <LookalikeWarning
+                  txid={t?.txid ?? ""}
+                  found={(t && props.lookalike.get(t.txid)) ?? []}
+                />
+              ),
+            }}
           />
           <Show when={props.shown === undefined}>
             <span class="visually-hidden" role="status">
@@ -474,9 +549,11 @@ function Unspent(props: {
   retry: () => void;
 }) {
   const [page, setPage] = createSignal(1);
+  // As for the transactions: an output the answer still lists, unchanged, keeps its row.
+  const steadyUtxos = steady<Utxo>((u) => `${u.txid}:${u.vout}`);
   const sorted = createMemo(() => {
     const u = settled(props.utxos);
-    return u ? sortUtxos(u) : undefined;
+    return u ? sortUtxos(steadyUtxos(u)) : undefined;
   });
   const tipHeight = () => {
     const t = Number(settled(props.tip));

@@ -24,6 +24,7 @@ use node::esplora::Esplora;
 use serde_json::{Value, json};
 
 use crate::mempool::{BlockSpends, TxInfo};
+use crate::outputs::Outputs;
 
 /// Most links one chain answer or message carries, in each direction. A longer history is cut
 /// and marked `truncated`.
@@ -135,6 +136,58 @@ impl Link {
     }
 }
 
+/// What a link keeps beside its figures, for comparing the two versions: each side's outputs and
+/// inputs. Kept beside the link rather than in it, so a [`Link`] stays `Copy`. Each is `None` when
+/// it was not recorded: a link stored before outputs were (store migration 0021), a replacement
+/// the tracker never held, or a transaction that arrived past the tracker's budget for outputs.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Sides {
+    /// The replaced transaction's outputs.
+    pub outputs: Option<Outputs>,
+    /// The replacement's.
+    pub by_outputs: Option<Outputs>,
+    /// How many inputs the replaced transaction had.
+    pub inputs: Option<u32>,
+    /// How many the replacement had.
+    pub by_inputs: Option<u32>,
+    /// How many inputs both spend, from the tracker's fingerprints when it held both. 0 means the
+    /// replaced transaction left with a parent that was replaced, not as an earlier version.
+    pub shared: Option<u32>,
+}
+
+impl Sides {
+    /// From the tracker's records of both sides: `by` is `None` when it never held the replacement,
+    /// and then `block` is the block that holds it, if the tracker's window has it: its own map
+    /// of who spends what says which inputs the two share. A transaction that shares no input
+    /// with its replacement left with a replaced parent: it is not an earlier version, so there is
+    /// nothing to compare and no outputs are kept for it.
+    pub fn of(tx: &TxInfo, by: Option<&TxInfo>, block: Option<(&BlockSpends, &Txid)>) -> Self {
+        let shared = by
+            .map(|b| tx.shared_inputs(b))
+            .or_else(|| block.map(|(b, by)| b.shared_inputs(tx, by)));
+        let compared = shared != Some(0);
+        Self {
+            outputs: tx.kept_outputs().filter(|_| compared),
+            by_outputs: by.and_then(TxInfo::kept_outputs).filter(|_| compared),
+            inputs: Some(tx.inputs()),
+            by_inputs: by.map(TxInfo::inputs),
+            shared,
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+/// One version of a replaced transaction, as the record holds it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Version {
+    pub facts: Facts,
+    pub outputs: Option<Outputs>,
+    pub inputs: Option<u32>,
+}
+
 /// One transaction in a replacement tree, and what it replaced.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
@@ -160,10 +213,13 @@ impl Node {
 }
 
 /// One change to the record, in the order made: what the store replays.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Change {
     /// A replacement, as recorded.
     Link(Link),
+    /// What the link for this replaced transaction keeps beside its figures; follows its
+    /// [`Change::Link`] when there is anything to keep.
+    Sides(Txid, Sides),
     /// Everything this transaction replaced now has its replacement in this state.
     Mined(Txid, Mined),
     /// The transaction no longer stands replaced, and what it replaced is no longer mined.
@@ -239,6 +295,8 @@ pub struct Replacements {
     order: VecDeque<(u64, Txid)>,
     /// Replaced txids by their replacement, to walk a history backwards.
     replaced: HashMap<Txid, Vec<Txid>>,
+    /// What each link keeps beside its figures, by replaced txid: only links that have any.
+    sides: HashMap<Txid, Sides>,
     next: u64,
     /// Links recorded since the counter was last taken, for the log.
     recorded: u64,
@@ -265,6 +323,7 @@ impl Replacements {
             links: HashMap::new(),
             order: VecDeque::new(),
             replaced: HashMap::new(),
+            sides: HashMap::new(),
             next: 0,
             recorded: 0,
             version: 0,
@@ -310,26 +369,44 @@ impl Replacements {
     /// Records a replacement seen now, and returns it as recorded: with the replacement's
     /// figures from its own old link when the tracker no longer held them.
     pub fn insert(&mut self, link: Link) -> Link {
-        let link = self.restore(link);
+        self.insert_with(link, Sides::default())
+    }
+
+    /// [`Self::insert`] with what the link keeps beside its figures.
+    pub fn insert_with(&mut self, link: Link, sides: Sides) -> Link {
+        let (link, sides) = self.restore_with(link, sides);
         self.recorded += 1;
         self.changes.push(Change::Link(link));
+        if !sides.is_empty() {
+            self.changes.push(Change::Sides(link.txid, sides));
+        }
         link
     }
 
     /// Puts back a link recorded before (from the store), oldest first, without counting it as
     /// new. Returns it as [`Self::insert`] does.
-    pub fn restore(&mut self, mut link: Link) -> Link {
+    pub fn restore(&mut self, link: Link) -> Link {
+        self.restore_with(link, Sides::default()).0
+    }
+
+    /// [`Self::restore`] with what the link keeps beside its figures. Returns both as recorded.
+    pub fn restore_with(&mut self, mut link: Link, mut sides: Sides) -> (Link, Sides) {
         self.unlink(&link.txid);
         // `by` is back (in the mempool or a block), so what replaced it before no longer has:
         // keeping both would make a loop with no newest end. Its figures stay, as this link's:
         // a miner confirming a transaction we saw replaced is the usual way here, and the
         // tracker no longer held it.
-        if let Some(old) = self.unlink(&link.by) {
+        if let Some((old, old_sides)) = self.unlink(&link.by) {
             link.by_tx = link.by_tx.or(Some(old.tx));
+            sides.by_outputs = sides.by_outputs.or(old_sides.outputs);
+            sides.by_inputs = sides.by_inputs.or(old_sides.inputs);
         }
         self.next += 1;
         self.version += 1;
         self.links.insert(link.txid, (self.next, link));
+        if !sides.is_empty() {
+            self.sides.insert(link.txid, sides.clone());
+        }
         self.order.push_back((self.next, link.txid));
         self.replaced.entry(link.by).or_default().push(link.txid);
         while self.order.len() > self.cap {
@@ -339,7 +416,7 @@ impl Replacements {
                 self.unlink(&t);
             }
         }
-        link
+        (link, sides)
     }
 
     /// `txid` was confirmed in this block: if it replaced anything, its tree is now mined.
@@ -582,8 +659,8 @@ impl Replacements {
         }
     }
 
-    /// Drops `txid`'s link, and returns it.
-    fn unlink(&mut self, txid: &Txid) -> Option<Link> {
+    /// Drops `txid`'s link, and returns it with what it kept beside it.
+    fn unlink(&mut self, txid: &Txid) -> Option<(Link, Sides)> {
         let (_, old) = self.links.remove(txid)?;
         if let Some(list) = self.replaced.get_mut(&old.by) {
             list.retain(|t| t != txid);
@@ -591,7 +668,36 @@ impl Replacements {
                 self.replaced.remove(&old.by);
             }
         }
-        Some(old)
+        Some((old, self.sides.remove(txid).unwrap_or_default()))
+    }
+
+    /// What the link for replaced transaction `txid` keeps beside its figures.
+    pub fn sides(&self, txid: &Txid) -> Option<&Sides> {
+        self.sides.get(txid)
+    }
+
+    /// `txid` as one version of a replaced transaction, if the record holds its figures: as a
+    /// replaced transaction, or as the replacement of one. Its outputs and inputs come from
+    /// whichever of its links kept them.
+    pub fn version_of(&self, txid: &Txid) -> Option<Version> {
+        let own = self.get(txid).map(|l| (l.tx, self.sides(txid)));
+        let links = self.replaced_by(txid);
+        let as_by = || links.iter().filter_map(|t| self.sides(t));
+        // Each field from whichever link kept it: a later link can lack what an earlier one has
+        // (it came back past the tracker's budget for outputs, say).
+        let facts = own
+            .map(|(f, _)| f)
+            .or_else(|| links.iter().find_map(|t| self.get(t).and_then(|l| l.by_tx)))?;
+        let own = own.and_then(|(_, s)| s);
+        Some(Version {
+            facts,
+            outputs: own
+                .and_then(|s| s.outputs.clone())
+                .or_else(|| as_by().find_map(|s| s.by_outputs.clone())),
+            inputs: own
+                .and_then(|s| s.inputs)
+                .or_else(|| as_by().find_map(|s| s.by_inputs)),
+        })
     }
 
     /// What replaced `txid`, then what replaced that, to the newest we know: at most
@@ -614,26 +720,128 @@ impl Replacements {
     }
 
     /// What `txid` replaced, and what those replaced, newest first: at most [`MAX_LINKS`], and
-    /// `true` if there were more.
+    /// `true` if there were more. Every link reached through version links comes first, so a
+    /// child that left with a replaced parent, or anything reached through one, cannot crowd an
+    /// earlier version out of the cut.
     pub fn earlier(&self, txid: &Txid) -> (Vec<Link>, bool) {
         let mut out = Vec::new();
         let mut seen = HashSet::from([*txid]);
+        // Version links first; each child link found is walked only once they are exhausted.
         let mut queue = VecDeque::from([*txid]);
-        while let Some(by) = queue.pop_front() {
-            for t in self.replaced.get(&by).into_iter().flatten() {
+        let mut deferred = VecDeque::new();
+        let mut through_child = false;
+        loop {
+            let Some(by) = queue.pop_front() else {
+                if through_child || deferred.is_empty() {
+                    break;
+                }
+                through_child = true;
+                queue = std::mem::take(&mut deferred);
+                continue;
+            };
+            for t in self.replaced_by(&by) {
+                let Some(l) = self.get(t) else { continue };
+                // In the first pass a child link waits; after it, every link is followed.
+                if !through_child && !self.is_version_link(t) {
+                    if !deferred.contains(&by) {
+                        deferred.push_back(by);
+                    }
+                    continue;
+                }
                 if !seen.insert(*t) {
                     continue;
                 }
                 if out.len() == MAX_LINKS {
                     return (out, true);
                 }
-                if let Some(l) = self.get(t) {
-                    out.push(*l);
-                }
+                out.push(*l);
                 queue.push_back(*t);
             }
         }
         (out, false)
+    }
+
+    /// Whether `txid`'s own link, to what replaced it, is a version link: it is unless it is
+    /// known to be a child's, one that shares no input with its replacement (`docs/MEMPOOL.md`,
+    /// "Versions"). A link whose count was not recorded counts as one.
+    pub fn is_version_link(&self, txid: &Txid) -> bool {
+        self.get(txid).is_some() && self.sides(txid).and_then(|s| s.shared) != Some(0)
+    }
+
+    /// The newest version of `txid`: its replacement, and that one's, while each link is a
+    /// version link. `txid` itself when nothing replaced it, or only as a child.
+    pub fn newest_version(&self, txid: &Txid) -> Txid {
+        let mut at = *txid;
+        let mut walked = HashSet::new();
+        while self.is_version_link(&at) && walked.insert(at) {
+            match self.get(&at) {
+                Some(l) => at = l.by,
+                None => break,
+            }
+        }
+        at
+    }
+
+    /// Whether `a` and `b` are versions of one another: joined by version links only. Each
+    /// transaction has at most one link of its own, so they are joined exactly when following
+    /// version links from each ends at the same transaction.
+    pub fn are_versions(&self, a: &Txid, b: &Txid) -> bool {
+        a != b && self.newest_version(a) == self.newest_version(b)
+    }
+
+    /// Every version of `txid`, oldest first (the farthest from the newest first, then by txid),
+    /// `txid` among them: at most [`MAX_LINKS`] + 1, and `true` if there were more. Empty when
+    /// `txid` has no other version.
+    pub fn versions(&self, txid: &Txid) -> (Vec<Txid>, bool) {
+        let newest = self.newest_version(txid);
+        // The path from `txid` to the newest, walked whole (the record bounds it, and a version
+        // link is followed once). Of a path longer than the line holds, three things are always
+        // kept: `txid`, what replaced it (the pair its page compares first), and the versions
+        // nearest the newest, the newest among them; and the line says there were more.
+        let mut depth: HashMap<Txid, usize> = HashMap::new();
+        let mut path = vec![*txid];
+        let mut on_path = HashSet::from([*txid]);
+        while let Some(last) = path.last().copied()
+            && last != newest
+        {
+            match self.get(&last) {
+                Some(l) if on_path.insert(l.by) => path.push(l.by),
+                _ => break,
+            }
+        }
+        let n = path.len();
+        let mut more = n > MAX_LINKS + 1;
+        let nearest = if more { MAX_LINKS - 1 } else { n };
+        for (i, t) in path.iter().enumerate() {
+            if i <= 1 || n - i <= nearest {
+                depth.insert(*t, n - 1 - i);
+            }
+        }
+        // Then the rest, nearest the newest first, through version links only.
+        let mut queue = VecDeque::from([newest]);
+        let mut walked = HashSet::from([newest]);
+        while let Some(by) = queue.pop_front() {
+            let d = depth.get(&by).copied().unwrap_or(0);
+            for t in self.replaced_by(&by) {
+                if !self.is_version_link(t) || !walked.insert(*t) {
+                    continue;
+                }
+                if !depth.contains_key(t) {
+                    if depth.len() > MAX_LINKS {
+                        more = true;
+                        continue;
+                    }
+                    depth.insert(*t, d + 1);
+                }
+                queue.push_back(*t);
+            }
+        }
+        if depth.len() < 2 {
+            return (Vec::new(), false);
+        }
+        let mut out: Vec<(usize, Txid)> = depth.into_iter().map(|(t, d)| (d, t)).collect();
+        out.sort_unstable_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+        (out.into_iter().map(|(_, t)| t).collect(), more)
     }
 
     /// What `txid` itself replaced, oldest first.
