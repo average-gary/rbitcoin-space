@@ -125,6 +125,9 @@ test.describe("on a phone", () => {
     await expect(rows.first().getByText("Stratum V2")).toHaveCount(1);
     await expect(rows.nth(1).getByRole("link", { name: "DCEX" })).toBeVisible();
     await expect(rows.nth(1).getByText("Stratum V2")).toHaveCount(0);
+    // The short marked name's row too, so nothing is measured before its summary arrives.
+    await expect(rows.nth(2).getByRole("link", { name: "DCEX" })).toBeVisible();
+    await expect(rows.nth(2).getByText("Stratum V2")).toHaveCount(1);
     const faults: string[] = [];
     for (const width of [390, 320]) {
       await page.setViewportSize({ width, height: 844 });
