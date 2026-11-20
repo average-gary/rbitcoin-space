@@ -1018,6 +1018,9 @@ mod tests {
             msg["summary"]["miner"],
             json!({"name": "Foundry USA", "slug": "foundryusa"})
         );
+        assert_eq!(msg["summary"]["sv2"], false);
+        facts.sv2 = true;
+        assert_eq!(message(&facts, None)["summary"]["sv2"], true);
     }
 
     #[test]
