@@ -995,6 +995,10 @@ pub struct MempoolSummary {
     pub replaced: u64,
     pub evicted: u64,
     pub vanished: u64,
+    /// Heap bytes the tracked transactions' kept outputs take now, and the transactions added
+    /// this minute without them because that reached the tracker's budget (`docs/MEMPOOL.md`).
+    pub outputs_kept_bytes: u64,
+    pub outputs_unkept: u64,
     /// The tracker's node calls and response bytes.
     pub node_calls: u64,
     pub node_bytes: u64,
@@ -1793,7 +1797,7 @@ mod tests {
         let n = "signet";
         vec![
             both(&ServerStarting {
-                version: "0.3.0",
+                version: "0.4.0",
                 revision: "2912d6f0c3a1e4b5d6c7e8f9a0b1c2d3e4f5a6b7",
                 listen_addr: "127.0.0.1:0".into(),
                 web_dir: "web/dist".into(),
@@ -2246,6 +2250,8 @@ mod tests {
                 replaced: 3,
                 evicted: 10,
                 vanished: 1,
+                outputs_kept_bytes: 2_500_000,
+                outputs_unkept: 0,
                 node_calls: 200,
                 node_bytes: 150_000_000,
                 cycle_ms_max: 440.0,

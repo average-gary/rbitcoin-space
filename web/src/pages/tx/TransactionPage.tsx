@@ -1,4 +1,4 @@
-import { useParams } from "@solidjs/router";
+import { useLocation, useParams } from "@solidjs/router";
 import {
   createEffect,
   createMemo,
@@ -12,27 +12,40 @@ import {
 import type { JSX } from "@solidjs/web";
 import { Amount, Sats } from "../../components/Amount";
 import { FeeRate } from "../../components/FeeRate";
+import { Note } from "../../components/Note";
 import { Hash, HashFull } from "../../components/Hash";
 import { Link } from "../../components/Link";
 import { More } from "../../components/More";
 import { SectionHeader } from "../../components/SectionHeader";
 import { Empty, ErrorState } from "../../components/States";
 import { TimeAgo, TimeUtc } from "../../components/Time";
-import { createApi, createRequest, fetchApi, fetchApp, isNotFound } from "../../lib/api";
-import { type BlocksMessage, blocksTopic } from "../../lib/blocks-topic";
+import {
+  createApi,
+  createRequest,
+  fetchApi,
+  fetchApp,
+  fetchStamped,
+  isNotFound,
+} from "../../lib/api";
+import { type BlocksMessage, blocksTopic, type ChainTip } from "../../lib/blocks-topic";
 import type { Outspend, Transaction, TxStatus } from "../../lib/esplora";
 import { feeColor, formatSize, groupDigits, MISSING, truncateMiddle } from "../../lib/format";
 import { NETWORK_NAMES, paths } from "../../lib/network";
 import { useLiveStatus } from "../../lib/live";
 import { useNetwork, usePageTitle } from "../../lib/page";
+import { type Handover, readHandover } from "../../lib/lookalike";
+import { fetchSummaries } from "../../lib/summary";
 import { type ReplacementLink, type TxMessage, txTopic } from "../../lib/track-topics";
 import { TxLightning } from "../lightning/TxLightning";
 import { Code } from "./Code";
+import { CompareLine } from "./Compare";
 import { Flow, type Selection } from "./Flow";
 import { Inspector } from "./Inspector";
-import { Chain, Follow, Group, LiveState, POLL_MS, Strip } from "./Live";
+import { LookalikeNotice, lookalikeTitle, marksOf } from "./Lookalike";
+import { Chain, Follow, Group, leftWithParent, LiveState, POLL_MS, Strip } from "./Live";
 import {
   announcement as sayChange,
+  LEFT_WITH_PARENT,
   answered,
   EMPTY,
   heard,
@@ -54,9 +67,13 @@ import {
   stripPlace,
 } from "./state";
 import { confirmations, features, isCoinbase, isTxid, lockTimeMeaning, vsize } from "./tx";
+import { judgeFee, parentsOf, verdictDetail, verdictText, verdictTitle } from "./verdict";
 import "./TransactionPage.css";
 
 export { POLL_MS } from "./Live";
+
+/** Links the route said are a child's that a page remembers: as many as one answer can list. */
+const CHILD_LINKS_KEPT = 32;
 /** A server following as many transactions as it can is asked again this much later. */
 const REFUSED_RETRY_MS = 60_000;
 /** How long a live socket may say nothing about the transaction before the page checks over HTTP. */
@@ -114,6 +131,7 @@ function TransactionView(props: { txid: string }) {
   // Fetched alongside the transaction rather than after it, so neither waits on the other.
   const [outspends, { refetch: refetchSpends }] = createApi<Outspend[]>(
     () => `/tx/${props.txid}/outspends`,
+    { stamped: true },
   );
   const [tipText, { refetch: refetchTip }] = createApi<string>(() => "/blocks/tip/height", {
     as: "text",
@@ -125,6 +143,19 @@ function TransactionView(props: { txid: string }) {
   };
 
   const ready = () => (tx.state === "ready" ? tx() : undefined);
+  // An address page's flagged row may hand over its findings in the history entry's state; only
+  // those this transaction bears out are shown (lib/lookalike.ts).
+  const location = useLocation();
+  const handed = createMemo(() => {
+    const t = ready();
+    return t ? readHandover(location.state, t, network()) : undefined;
+  });
+  // Said politely when the notice shows, cleared when it goes. A memo of the words, so a refresh
+  // that hands back the same findings writes nothing and is not said again.
+  const lookalikeSaid = createMemo(() => {
+    const h = handed();
+    return h ? lookalikeTitle(h) : "";
+  });
   /** The model's clock when the transaction was last asked for. */
   let txAsked = 0;
   /** Numbers the page's HTTP questions about the status, the first load being 0. */
@@ -133,7 +164,13 @@ function TransactionView(props: { txid: string }) {
   const missing = () => tx.state === "errored" && isNotFound(tx.error);
   // undefined while loading; null when it failed, so the page can say so instead of waiting.
   const spends = () =>
-    outspends.state === "ready" ? outspends() : outspends.state === "errored" ? null : undefined;
+    outspends.state === "ready"
+      ? outspends()?.value
+      : outspends.state === "errored"
+        ? null
+        : undefined;
+  /** The chain tip the spends are as of: what the fee verdict checks before trusting them. */
+  const spendsTip = () => (outspends.state === "ready" ? outspends()?.tip : undefined);
 
   const [model, setModel] = createSignal<Model>(EMPTY);
   const socket = useLiveStatus();
@@ -327,12 +364,25 @@ function TransactionView(props: { txid: string }) {
   // server does not follow this network's mempool (the route would refuse).
   const replacementsKey = () => {
     const l = live();
-    if (l === "off" || l === "connecting") return false;
-    if (missing()) return "missing";
-    const s = shownNow().kind;
-    if (s === "gone") return "gone";
+    if (l === "off") return false;
     const t = ready();
-    return t && !t.status.confirmed ? "waiting" : false;
+    const s = shownNow();
+    // Replaced while open: asked again, so the page learns whether this was a version or a child
+    // that left with its parent before it offers a comparison. Again when the newest changes.
+    // Before anything else: a transaction that loaded confirmed can be sent back by a reorg and
+    // then replaced.
+    if (s.kind === "replaced") return `replaced:${s.chain.at(-1)?.by ?? ""}`;
+    // Confirmed, it may be the newest version of something replaced, however long ago: asked
+    // once (one lookup in the server's memory, never the node). A settled transaction follows no
+    // topic, so this does not wait for one; a server without the mempool engine answers 503,
+    // read as nothing. By what the page shows now, not by how it loaded.
+    if (s.kind === "confirmed" || (s.kind === "loading" && t?.status.confirmed === true)) {
+      return "confirmed";
+    }
+    if (l === "connecting") return false;
+    if (missing()) return "missing";
+    if (s.kind === "gone") return "gone";
+    return t ? "waiting" : false;
   };
   // The page's own abort signal, not the request's: an answer a newer request replaced still
   // records what it learned in the model.
@@ -349,7 +399,45 @@ function TransactionView(props: { txid: string }) {
       return null;
     }
   });
+  // The links the route said are a child's, kept for the page's life: two transactions that share
+  // no input never come to share one, so what was said of a link stays true of it. Taken only
+  // from answers the page took up (one a newer ask replaced is never read here), and nothing
+  // else of an old answer is kept. They stand beside whatever the route says now, for the links
+  // it no longer speaks of: an ask that fails, or one answered after the server's bounded record
+  // let the link go while the topic still shows it, does not send the page back to calling the
+  // transaction replaced.
+  const childLinks = new Map<string, ReplacementLink>();
+  const later = createMemo((): ReplacementLink[] => {
+    const said = replacements()?.replacedBy;
+    for (const l of said ?? []) {
+      if (l.shared !== 0) continue;
+      const k = `${l.txid}>${l.by}`;
+      // Newest last.
+      childLinks.delete(k);
+      childLinks.set(k, { txid: l.txid, by: l.by, shared: 0 });
+    }
+    // No more than one answer can list, on a page left open through many: the oldest is
+    // forgotten, but never a link the page is showing, which is the one it must not misname.
+    const now = shownNow();
+    const showing = new Set(
+      now.kind === "replaced" ? now.chain.map((l) => `${l.txid}>${l.by}`) : [],
+    );
+    while (childLinks.size > CHILD_LINKS_KEPT) {
+      const oldest = [...childLinks.keys()].find((k) => !showing.has(k));
+      if (oldest === undefined) break;
+      childLinks.delete(oldest);
+    }
+    if (!said) return [...childLinks.values()];
+    const spoken = new Set(said.map((l) => `${l.txid}>${l.by}`));
+    const remembered = [...childLinks].filter(([k]) => !spoken.has(k)).map(([, l]) => l);
+    return remembered.length === 0 ? said : [...said, ...remembered];
+  });
   const replaced = () => replacements()?.replaces.filter((l) => l.by === props.txid) ?? [];
+  // Shown as replaced, but by nothing of its own: it left with a transaction it depended on.
+  const childNow = () => {
+    const s = shownNow();
+    return s.kind === "replaced" && leftWithParent(s.chain[0], later());
+  };
 
   // Who it is mined with: asked again when its group's rate changes.
   const relativesKey = () => {
@@ -372,12 +460,21 @@ function TransactionView(props: { txid: string }) {
 
   // Each change of state is said once, in words; a position that only moves is not.
   const [announcement, setAnnouncement] = createSignal("");
+  // The same words twice in a row are still said twice. A live region speaks only when its text
+  // changes, so a repeat carries a trailing no-break space, which is not read out: no change of
+  // state goes unannounced for being worded like the one before it.
+  const say = (text: string) => setAnnouncement((now) => (now === text ? `${text}\u00A0` : text));
+  // The topic's word comes first and says only "replaced": once the route says it left with a
+  // transaction it depended on, that is said, so the announcement does not stand uncorrected.
+  createEffect(childNow, (is, was) => {
+    if (is && was !== true) say(LEFT_WITH_PARENT);
+  });
   const [justConfirmed, setJustConfirmed] = createSignal(false);
   const [reorged, setReorged] = createSignal<number>();
   createEffect(shownNow, (after, before) => {
     if (!before) return;
-    const said = sayChange(before, after);
-    if (said !== undefined) setAnnouncement(said);
+    const said = sayChange(before, after, childNow());
+    if (said !== undefined) say(said);
     if (after.kind === "confirmed") {
       // Once, when it confirms; the block's time arriving a moment later changes nothing.
       if (before.kind !== "confirmed") setJustConfirmed(before.kind === "mempool");
@@ -416,7 +513,7 @@ function TransactionView(props: { txid: string }) {
               )
             }
           >
-            <StatusBadge shown={shownNow()} />
+            <StatusBadge shown={shownNow()} child={childNow()} />
           </Show>
           <Show when={following()}>
             <LiveState liveness={live()} network={NETWORK_NAMES[network()]} />
@@ -427,9 +524,12 @@ function TransactionView(props: { txid: string }) {
       <p class="visually-hidden" aria-live="polite">
         {announcement()}
       </p>
+      <p class="visually-hidden" aria-live="polite">
+        {lookalikeSaid()}
+      </p>
       <Switch fallback={<Skeleton />}>
         <Match when={missing() && shownNow()} keyed>
-          {(s) => <Departed shown={s} replacements={replacements()} />}
+          {(s) => <Departed shown={s} replacements={replacements()} later={later()} />}
         </Match>
         <Match when={tx.error}>
           <ErrorState title="Could not load this transaction" error={tx.error} retry={retry} />
@@ -443,11 +543,15 @@ function TransactionView(props: { txid: string }) {
               tip={tip()}
               confs={confs()}
               spends={spends}
+              spendsTip={spendsTip}
               justConfirmed={justConfirmed()}
               reorged={reorged()}
               replaced={replaced()}
+              versions={replacements()?.versions}
+              later={later()}
               relatives={relatives() ?? undefined}
               liveness={live()}
+              lookalike={handed()}
             />
           )}
         </Match>
@@ -460,7 +564,12 @@ function TransactionView(props: { txid: string }) {
  * A transaction the node does not have: what this server knows of it, and no more. Replaced or
  * dropped while someone followed it, replaced while the server remembered, or simply not found.
  */
-function Departed(props: { shown: Shown; replacements: Replacements | null | undefined }) {
+function Departed(props: {
+  shown: Shown;
+  replacements: Replacements | null | undefined;
+  /** What replaced it, as the route said, or the child's links it said before an ask failed. */
+  later: ReplacementLink[];
+}) {
   const network = useNetwork();
   return (
     <Switch
@@ -483,7 +592,14 @@ function Departed(props: { shown: Shown; replacements: Replacements | null | und
       }
     >
       <Match when={props.shown.kind === "replaced" && props.shown} keyed>
-        {(s) => <ReplacedNotice chain={s.chain} truncated={s.truncated} />}
+        {(s) => (
+          <ReplacedNotice
+            chain={s.chain}
+            truncated={s.truncated}
+            versions={props.replacements?.versions}
+            later={props.later}
+          />
+        )}
       </Match>
       <Match when={props.shown.kind === "evicted"}>
         <Notice tone="negative" title="Dropped from the mempool without being mined">
@@ -513,11 +629,29 @@ function Notice(props: { tone: "negative" | "caution"; title: string; children: 
   );
 }
 
-function ReplacedNotice(props: { chain: ReplacementLink[]; truncated: boolean }) {
+function ReplacedNotice(props: {
+  chain: ReplacementLink[];
+  truncated: boolean;
+  versions?: string[] | undefined;
+  later?: ReplacementLink[] | undefined;
+}) {
   const first = () => props.chain[0];
+  const child = () => leftWithParent(first(), props.later);
   return (
-    <Notice tone="negative" title="This version was replaced">
-      <Show when={first()}>
+    <Notice
+      tone="negative"
+      title={child() ? "Removed with a replaced transaction" : "This version was replaced"}
+    >
+      <Show when={child() && first()}>
+        {(l) => (
+          <p>
+            It left the mempool when <Hash value={l().by} href={paths.tx(l().by)} copy={false} />{" "}
+            replaced a transaction it depended on. No new version of this transaction took its
+            place. It can still confirm only if the replaced transaction is mined after all.
+          </p>
+        )}
+      </Show>
+      <Show when={!child() && first()}>
         {(l) => (
           <p>
             Another transaction spending the same coins took its place:{" "}
@@ -534,7 +668,13 @@ function ReplacedNotice(props: { chain: ReplacementLink[]; truncated: boolean })
           </p>
         )}
       </Show>
-      <Chain chain={props.chain} truncated={props.truncated} />
+      <Chain
+        chain={props.chain}
+        truncated={props.truncated}
+        versions={props.versions ?? []}
+        later={props.later ?? []}
+        explained
+      />
     </Notice>
   );
 }
@@ -562,8 +702,12 @@ const BADGES: Record<
   gone: ["Removed", "negative"],
 };
 
-function StatusBadge(props: { shown: Shown }) {
-  const badge = () => (props.shown.kind === "loading" ? undefined : BADGES[props.shown.kind]);
+function StatusBadge(props: { shown: Shown; child?: boolean }) {
+  // A child that left with its replaced parent was removed, not replaced.
+  const badge = () =>
+    props.shown.kind === "loading"
+      ? undefined
+      : BADGES[props.child === true ? "gone" : props.shown.kind];
   return (
     <Show when={badge()}>
       {(b) => (
@@ -591,13 +735,20 @@ function Body(props: {
   tip: number | undefined;
   confs: number | undefined;
   spends: () => Outspend[] | null | undefined;
+  spendsTip: () => ChainTip | undefined;
   justConfirmed: boolean;
   /** The height of the block that held it, when a reorganisation sent it back to the mempool. */
   reorged: number | undefined;
   /** What it replaced, as far as the server remembers. */
   replaced: ReplacementLink[];
+  /** Its line of versions, from the replacements route: undefined until asked. */
+  versions: string[] | undefined;
+  /** What replaced it, from the same route: how many inputs each pair shares. */
+  later: ReplacementLink[];
   relatives: Relatives | undefined;
   liveness: Liveness;
+  /** Lookalikes handed over from an address page's flagged row, checked against this transaction. */
+  lookalike: Handover | undefined;
 }) {
   const network = useNetwork();
   const coinbase = () => isCoinbase(props.tx);
@@ -632,14 +783,19 @@ function Body(props: {
     });
   };
 
+  // Shown as replaced, but by nothing of its own: it left with a transaction it depended on.
+  const child = () =>
+    props.shown.kind === "replaced" && leftWithParent(props.shown.chain[0], props.later);
   // The full sequence, for a transaction that left the mempool unconfirmed or came back to it.
   const steps = (): Step[] => {
     const title = coinbase() ? "Spendable" : "Six confirmations";
     const third: Step =
       props.shown.kind === "replaced"
         ? {
-            title: "Will not confirm",
-            detail: "Its coins are spent by the version that replaced it.",
+            title: child() ? "Not expected to confirm" : "Will not confirm",
+            detail: child()
+              ? "Unless the transaction it depended on is mined after all, in place of what replaced it."
+              : "Its coins are spent by the version that replaced it.",
             state: "dead",
           }
         : left()
@@ -663,6 +819,23 @@ function Body(props: {
       const now = props.shown;
       if (now.kind === "replaced") {
         const l = now.chain[0];
+        // A child's own link: it left with a transaction it depended on, replaced by what it names.
+        if (l && child()) {
+          return {
+            title: "Removed with its parent",
+            detail: (
+              <>
+                <span>
+                  When <Hash value={l.by} href={paths.tx(l.by)} copy={false} /> replaced a
+                  transaction it depended on
+                </span>
+                <Show when={l.seen}>{(t) => <TimeUtc time={t()} />}</Show>
+              </>
+            ),
+            state: "dead",
+            tone: "negative",
+          };
+        }
         return {
           title: "Replaced",
           detail: l ? (
@@ -733,6 +906,56 @@ function Body(props: {
     const own = rate();
     return eff !== undefined && own !== undefined && ratesDiffer(eff, own) ? eff : undefined;
   };
+  // Its rate against its block's low end: only once mined, and only when nothing could make it
+  // mislead (docs/FRONTEND.md "A confirmed transaction's fee verdict").
+  /** Whether a verdict may come: its line is kept from then on. */
+  const judged = () => {
+    const at = status();
+    return (
+      confirmed() &&
+      !coinbase() &&
+      rate() !== undefined &&
+      at?.block_hash !== undefined &&
+      at.block_height !== undefined
+    );
+  };
+  const verdictKey = () => {
+    const at = status();
+    // After the page's own spends, which are used when they are as of this block.
+    if (!judged() || props.spends() === undefined) return false;
+    return `${at?.block_height}:${at?.block_hash}`;
+  };
+  const [verdict] = createRequest(verdictKey, async (key, signal) => {
+    const [h = "", block = ""] = key.split(":");
+    const height = Number(h);
+    try {
+      return await judgeFee({
+        rate: rate(),
+        block,
+        height,
+        parents: parentsOf(props.tx.vin ?? []),
+        summary: async () => (await fetchSummaries(network(), [block], signal)).get(block),
+        // Spends answered before this block was known (asked as it arrived, before a live
+        // confirmation, or while another block held it at this height) cannot show a child mined
+        // in it: they are asked again.
+        spends: async () => {
+          const value = props.spends();
+          const tip = props.spendsTip();
+          const sameLoad = props.tx.status.block_hash === block;
+          return sameLoad && tip !== undefined && tip.height >= height
+            ? { value, tip }
+            : fetchStamped<Outspend[]>(network(), `/tx/${props.tx.txid}/outspends`, {
+                signal,
+                fresh: true,
+              });
+        },
+        status: (txid) =>
+          fetchStamped<TxStatus>(network(), `/tx/${txid}/status`, { signal, fresh: true }),
+      });
+    } catch {
+      return undefined;
+    }
+  });
   const lock = () => lockTimeMeaning(props.tx.locktime, props.tx.vin);
   const [raw, setRaw] = createSignal<{ hex?: string; error?: unknown; loading?: boolean }>({});
   const [rawShown, setRawShown] = createSignal(false);
@@ -800,8 +1023,10 @@ function Body(props: {
   const rbf =
     "Until it confirms it can be replaced by a transaction spending the same coins that pays more: nodes relay one whatever its sequence numbers say (full replace-by-fee).";
 
+  const marks = createMemo(() => marksOf(props.lookalike));
   return (
     <>
+      <Show when={props.lookalike}>{(h) => <LookalikeNotice h={h()} />}</Show>
       {/* The answer first: where it is, what it paid, what it moved, and when. */}
       <dl class="tx-answer panel" aria-label="Summary">
         <div class="tx-answer__cell tx-answer__cell--where">
@@ -811,7 +1036,9 @@ function Body(props: {
                 <dt>Block</dt>
                 <dd>
                   <span class="tx-answer__value">{MISSING}</span>
-                  <span class="tx-answer__sub">Will not confirm</span>
+                  <span class="tx-answer__sub">
+                    {child() ? "Not expected to confirm" : "Will not confirm"}
+                  </span>
                 </dd>
               </>
             }
@@ -909,6 +1136,22 @@ function Body(props: {
                 </span>
               )}
             </Show>
+            {/* Its line is kept from the moment a verdict may come, so one arriving moves nothing
+                where this cell has a row to itself (the narrowest phones). */}
+            <Show when={judged()}>
+              <span class="tx-answer__sub tx-verdict">
+                <Show
+                  when={verdictKey() !== false && verdict.state === "ready" && verdict()}
+                  fallback={"\u00A0"}
+                >
+                  {(said) => (
+                    <Note focusable below title={verdictTitle(said())} figure={verdictText(said())}>
+                      {verdictDetail(said())}
+                    </Note>
+                  )}
+                </Show>
+              </span>
+            </Show>
           </dd>
         </div>
         <div class="tx-answer__cell tx-answer__cell--amount">
@@ -989,7 +1232,14 @@ function Body(props: {
       </Switch>
       <Switch>
         <Match when={props.shown.kind === "replaced" && props.shown} keyed>
-          {(r) => <ReplacedNotice chain={r.chain} truncated={r.truncated} />}
+          {(r) => (
+            <ReplacedNotice
+              chain={r.chain}
+              truncated={r.truncated}
+              versions={props.versions}
+              later={props.later}
+            />
+          )}
         </Match>
         <Match when={props.shown.kind === "evicted"}>
           <Notice tone="negative" title="Dropped from the mempool without being mined">
@@ -1008,6 +1258,16 @@ function Body(props: {
           )}
         </Match>
       </Switch>
+      {/* A version that replaced others, and stands: what changed from the one before. */}
+      <Show when={props.shown.kind !== "replaced" && props.versions}>
+        {(line) => (
+          <Show when={line().length > 1}>
+            <div class="tx-versions">
+              <CompareLine versions={line()} here={props.tx.txid} />
+            </div>
+          </Show>
+        )}
+      </Show>
       <Show when={!settled()}>
         <ol class="tx-timeline" aria-label="Status">
           {/* By position: each change of status updates the three steps in place, never remakes them. */}
@@ -1036,7 +1296,13 @@ function Body(props: {
               This node has pruned the inputs of transactions this old, so some are missing.
             </p>
           </Show>
-          <Flow tx={props.tx} outspends={props.spends} selected={selected()} onSelect={select} />
+          <Flow
+            tx={props.tx}
+            outspends={props.spends}
+            selected={selected()}
+            onSelect={select}
+            lookalike={marks()}
+          />
         </section>
 
         {/* The facts that are left; an input's or output's inspector takes their place. */}
@@ -1056,6 +1322,7 @@ function Body(props: {
               </Fact>
               <Fact label="Replaceable">
                 <Switch>
+                  <Match when={child()}>No: it was removed with its parent</Match>
                   <Match when={props.shown.kind === "replaced"}>No: it was replaced</Match>
                   <Match when={left()}>No: it is no longer in the mempool</Match>
                   <Match when={confirmed()}>No: it is confirmed</Match>
@@ -1133,6 +1400,7 @@ function Body(props: {
                   selected={s}
                   outspends={props.spends}
                   onClose={() => setSelected(null)}
+                  lookalike={marks()}
                   ref={(el) => {
                     inspectorHeading = el;
                   }}

@@ -746,11 +746,7 @@ async fn report(
                         (f.confirmed, f.replaced) = (b.confirmed, b.replaced);
                         (f.node_calls, f.node_bytes) = (b.calls, b.bytes);
                     }
-                    summary.confirmed += b.confirmed as u64;
-                    summary.replaced += b.replaced as u64;
-                    summary.evicted += b.evicted as u64;
-                    summary.node_calls += u64::from(b.calls);
-                    summary.node_bytes += b.bytes;
+                    count_block(&mut summary, &b);
                 }
                 Ok(mempool::Event::Cycle(c)) => {
                     if let (Some(f), Some(tip)) = (clock(&found).as_mut(), c.tip)
@@ -773,6 +769,8 @@ async fn report(
                     summary.replaced += c.replaced as u64;
                     summary.evicted += c.evicted as u64;
                     summary.vanished += c.vanished as u64;
+                    summary.outputs_kept_bytes = c.kept_bytes;
+                    summary.outputs_unkept += c.unkept as u64;
                     summary.node_calls += u64::from(c.calls);
                     summary.node_bytes += c.bytes;
                     summary.cycle_ms_max = summary.cycle_ms_max.max(ms(c.duration));
@@ -872,7 +870,8 @@ async fn report(
                     logging::emit(&summary);
                 }
                 let (txs, stale) = (summary.txs, summary.stale);
-                summary = MempoolSummary { txs, stale, ..summary_line(network) };
+                let outputs_kept_bytes = summary.outputs_kept_bytes;
+                summary = MempoolSummary { txs, stale, outputs_kept_bytes, ..summary_line(network) };
             }
         }
     }
@@ -890,6 +889,17 @@ fn lag(network: &'static str, source: &'static str, missed: u64, total: &mut u64
     }
 }
 
+/// A block applied from its own list, folded into the minute's summary. What the outputs take
+/// is the state now, so a block that confirmed some is said at once, not after the next listing.
+fn count_block(summary: &mut MempoolSummary, b: &mempool::CycleStats) {
+    summary.confirmed += b.confirmed as u64;
+    summary.replaced += b.replaced as u64;
+    summary.evicted += b.evicted as u64;
+    summary.node_calls += u64::from(b.calls);
+    summary.node_bytes += b.bytes;
+    summary.outputs_kept_bytes = b.kept_bytes;
+}
+
 fn summary_line(network: &'static str) -> MempoolSummary {
     MempoolSummary {
         network,
@@ -901,6 +911,8 @@ fn summary_line(network: &'static str) -> MempoolSummary {
         replaced: 0,
         evicted: 0,
         vanished: 0,
+        outputs_kept_bytes: 0,
+        outputs_unkept: 0,
         node_calls: 0,
         node_bytes: 0,
         cycle_ms_max: 0.0,

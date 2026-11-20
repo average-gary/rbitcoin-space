@@ -21,17 +21,29 @@ export function watchFiles(): void {
 }
 
 /**
+ * Notes a stylesheet as failed though no error was seen for it, so `retryFiles` asks for it again:
+ * one whose rules a page found missing (the QR pop-up checks its own, components/qr/load.ts).
+ */
+export function noteFailedStyle(link: HTMLLinkElement): void {
+  failedStyles.add(link);
+}
+
+/**
  * Asks again for every file that failed: each stylesheet through a fresh `<link>` in place of the
  * old, each script with a request that skips the cache, which only proves it downloads now (the
  * page's `import()` loads it). Waits for every one to settle. Resolves when all have loaded, with
  * whether any of them was a script; rejects when any failed again. Then each failed stylesheet and
  * every script is noted again, so the attempt that finally succeeds still says scripts were proven.
+ *
+ * `only` narrows it to the files a caller names by their address, and leaves every other failed
+ * file on the lists, untouched: a part of the page that loads its own code (the palette) asks for
+ * its own files and never takes a page's off the lists while the shell waits to ask for them.
  */
-export async function retryFiles(): Promise<{ scripts: boolean }> {
-  const links = [...failedStyles];
-  const scripts = [...failedScripts];
-  failedStyles.clear();
-  failedScripts.clear();
+export async function retryFiles(only?: (href: string) => boolean): Promise<{ scripts: boolean }> {
+  const links = [...failedStyles].filter((link) => only?.(link.href) ?? true);
+  const scripts = [...failedScripts].filter((href) => only?.(href) ?? true);
+  for (const link of links) failedStyles.delete(link);
+  for (const href of scripts) failedScripts.delete(href);
   const settled = await Promise.allSettled([
     ...links.map(
       (old) =>

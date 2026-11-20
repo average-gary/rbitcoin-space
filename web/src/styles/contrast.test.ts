@@ -86,6 +86,8 @@ describe("contrast from the tokens", () => {
       expect(short(theme, TEXT.slice(0, 6), ["color-accent-soft"], 4.5)).toStrictEqual([]);
       expect(short(theme, ["color-on-accent"], ["color-accent"], 4.5)).toStrictEqual([]);
       expect(short(theme, MARKS, SURFACES, 3)).toStrictEqual([]);
+      // A QR code's card stays light in both themes (components/qr/draw.ts holds a node's ink to this).
+      expect(short(theme, ["qr-ink"], ["qr-paper"], 4.5)).toStrictEqual([]);
     });
 
     it(`steps the forwarding-rate ramp in lightness, away from the surface, ${name}`, () => {
@@ -121,6 +123,41 @@ describe("contrast from the tokens", () => {
         );
         expect(ratio(colour, band), `${net}'s edge on its band`).toBeGreaterThan(3);
       }
+    });
+
+    it(`keeps the palette's glass readable over any page, ${name}`, () => {
+      // The page under the panel is veiled, blurred, then seen through the glass, and the selected
+      // row's tint lies over that: the page's darkest and lightest pixels bound every mix the blur
+      // can make of it. (The blur's saturation is left out: it keeps a grey grey.)
+      const css = (token: string): [Rgb, number] => {
+        const scope = name === "light" ? ":root {" : ':root[data-theme="dark"] {';
+        const start = tokens.indexOf(scope);
+        const body = tokens.slice(start, tokens.indexOf("}", start));
+        const m = new RegExp(`--${token}: rgb\\((\\d+) (\\d+) (\\d+) / ([\\d.]+)\\)`).exec(body);
+        if (!m) throw new Error(`no --${token} in ${name}`);
+        return [[Number(m[1]), Number(m[2]), Number(m[3])], Number(m[4])];
+      };
+      const [veil, dim] = css("color-veil");
+      const [glass, alpha] = css("color-glass");
+      const [lit, glow] = css("color-glass-lit");
+      const faint: string[] = [];
+      for (const page of [
+        [0, 0, 0],
+        [255, 255, 255],
+      ] as Rgb[]) {
+        const pane = mix(glass, alpha, mix(veil, dim, page));
+        for (const [where, under] of [
+          ["pane", pane],
+          ["selected row", mix(lit, glow, pane)],
+        ] as const) {
+          for (const text of ["color-text", "color-text-muted", "color-accent"]) {
+            const r = ratio(rgb(theme.get(text) ?? ""), under);
+            if (r < 4.5)
+              faint.push(`${text} on the ${where} over ${page.join(" ")}: ${r.toFixed(2)}`);
+          }
+        }
+      }
+      expect(faint).toStrictEqual([]);
     });
   });
 });

@@ -9,6 +9,8 @@ export interface HashProps {
   value: string;
   /** Network-free page path (from `paths`) to link to. */
   href?: string;
+  /** History state the link's navigation carries, as JSON (the router's `state`); never the URL. */
+  linkState?: string | undefined;
   /**
    * Characters kept at each end: 8 and 8 in lists, 7 and 5 for addresses in the flow diagram. Where
    * the room is narrower still, the head gives way to its ellipsis; the tail is always whole.
@@ -67,7 +69,12 @@ export function Hash(props: HashProps) {
         }
       >
         {(href) => (
-          <Link class="hash__text tap-line" href={href()} title={props.value}>
+          <Link
+            class="hash__text tap-line"
+            href={href()}
+            title={props.value}
+            state={props.linkState}
+          >
             {short()}
           </Link>
         )}
@@ -79,14 +86,15 @@ export function Hash(props: HashProps) {
   );
 }
 
-/** A hash shown whole as a page subject, in groups of eight, with a copy button. */
-export function HashFull(props: { value: string; copyLabel?: string }) {
+/** A hash shown whole as a page subject, in groups of eight, with a copy button and `children` after it. */
+export function HashFull(props: { value: string; copyLabel?: string; children?: JSX.Element }) {
   return (
     <span class="hash hash--full">
       <span class="hash__text">
         <For each={hashGroups(props.value)}>{(g) => <span class="hash__group">{g}</span>}</For>
       </span>
       <CopyButton value={props.value} {...(props.copyLabel ? { label: props.copyLabel } : {})} />
+      {props.children}
     </span>
   );
 }

@@ -29,7 +29,7 @@ use super::{Conn, Frame, Hub, Snapshot, Topic};
 use crate::config::{Limits, Network, WsLimits};
 use crate::esplora::HeavyShare;
 use crate::limits::Clients;
-use crate::replacements::{Batch, Facts, Kept, Link, MAX_LINKS, Mined, Replacements};
+use crate::replacements::{Batch, Facts, Kept, Link, MAX_LINKS, Mined, Replacements, Sides};
 use crate::{ApiError, esplora};
 use engine::replacements::{Answer, Ask, Lookup};
 
@@ -43,8 +43,8 @@ pub const MEMPOOL_SYNCING: ApiError =
 const SUMMARY_EVERY: Duration = Duration::from_secs(60);
 
 /// A tracked topic's name as a client writes it, parsed strictly: `tx:` and 64 lowercase hex
-/// digits, or `address:` and an address of this network. Returns the topic and its name as the
-/// server writes it (bech32 in lower case).
+/// digits, or `address:` and an address of this network or a public key. Returns the topic and its
+/// name as the server writes it (bech32 and a key's hex in lower case).
 pub fn parse(name: &str, network: Network) -> Option<(Topic, String)> {
     if let Some(hex) = name.strip_prefix("tx:") {
         if !hex
@@ -56,9 +56,9 @@ pub fn parse(name: &str, network: Network) -> Option<(Topic, String)> {
         let txid = esplora::txid(hex).ok()?;
         return Some((Topic::Tx(txid), name.to_owned()));
     }
-    let address = esplora::address(name.strip_prefix("address:")?, network).ok()?;
-    let sh = ScriptHash::from_script(&address.script_pubkey());
-    Some((Topic::Address(sh), format!("address:{address}")))
+    let payee = esplora::payee(name.strip_prefix("address:")?, network).ok()?;
+    let sh = ScriptHash::from_script(&payee.script_pubkey());
+    Some((Topic::Address(sh), format!("address:{payee}")))
 }
 
 /// Whether `topic` follows a transaction or an address, in either protocol: those go through
@@ -342,10 +342,16 @@ impl Tracking {
     }
 
     /// Puts back links recorded before (from the store), oldest first.
+    #[cfg(test)]
     pub(crate) fn restore_replacements(&self, links: Vec<Link>) {
+        self.restore_kept(links.into_iter().map(|l| (l, Sides::default())).collect());
+    }
+
+    /// [`Self::restore_replacements`] with what each link keeps beside its figures.
+    pub(crate) fn restore_kept(&self, links: Vec<(Link, Sides)>) {
         let mut st = lock(&self.state);
-        for l in links {
-            st.replacements.restore(l);
+        for (l, s) in links {
+            st.replacements.restore_with(l, s);
         }
     }
 
@@ -606,24 +612,24 @@ impl Tracking {
                 .binary_search_by_key(by, |(t, _)| *t)
                 .ok()
                 .and_then(|i| d.added.get(i))
-                .map(|(_, i)| Facts::of(i))
-                .or_else(|| tracker.read(|m| m.get(by).map(Facts::of)));
+                .map(|(_, i)| i.clone())
+                .or_else(|| tracker.read(|m| m.get(by).cloned()));
             // The tracker names as a replacement only what entered the mempool in this cycle or
             // sits in one of the window's blocks.
-            let mined = d
-                .blocks
-                .iter()
-                .find(|b| b.contains(by))
-                .map_or(Mined::No, |b| Mined::In(Some((b.height, b.hash))));
+            let block = d.blocks.iter().find(|b| b.contains(by));
+            let mined = block.map_or(Mined::No, |b| Mined::In(Some((b.height, b.hash))));
             let link = Link {
                 txid: *txid,
                 by: *by,
                 seen,
                 tx: Facts::of(info),
-                by_tx: by_info,
+                by_tx: by_info.as_ref().map(Facts::of),
                 mined,
             };
-            st.replacements.insert(link);
+            st.replacements.insert_with(
+                link,
+                Sides::of(info, by_info.as_ref(), block.map(|b| (&**b, by))),
+            );
         }
         for (txid, reason) in &d.removed {
             if let Removal::Confirmed { height, block } = reason {
