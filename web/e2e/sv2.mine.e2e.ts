@@ -5,7 +5,7 @@
 // project), and holds the pages showing the mark to the layout rules the sweeps ran without it.
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import type { APIRequestContext } from "@playwright/test";
+import type { APIRequestContext, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { layoutFaults } from "./layout";
 import { tablesFit } from "./rows";
@@ -26,6 +26,39 @@ function tagged(...tags: string[]): { block: string }[] {
       encoding: "utf8",
     }),
   ) as { block: string }[];
+}
+
+/**
+ * Each marked row of the blocks list: where taps on its mark land (by the link found there), and
+ * how far its name's target reaches past its row, in px.
+ */
+function marks(page: Page) {
+  return page.locator("tbody").evaluate((tbody) =>
+    [...tbody.querySelectorAll("tr")].flatMap((tr) => {
+      const chip = tr.querySelector(".block-sv2");
+      const link = tr.querySelector(".blocks-miner");
+      if (chip === null || link === null) return [];
+      tr.scrollIntoView({ block: "center" });
+      const row = tr.getBoundingClientRect();
+      const target = link.getBoundingClientRect();
+      const b = chip.getBoundingClientRect();
+      const at = (fx: number, fy: number) =>
+        document
+          .elementFromPoint(b.x + b.width * fx, b.y + b.height * fy)
+          ?.closest("a")
+          ?.getAttribute("href");
+      return [
+        {
+          name: link.textContent ?? "",
+          pool: link.getAttribute("href"),
+          lands: [
+            ...new Set([0.02, 0.5, 0.98].flatMap((x) => [0.05, 0.5, 0.95].map((y) => at(x, y)))),
+          ],
+          out: Math.max(row.top - target.top, target.bottom - row.bottom),
+        },
+      ];
+    }),
+  );
 }
 
 /** Waits until the list the pages read begins with `block`: the server reuses it for a second. */
@@ -104,7 +137,11 @@ test.describe("on a phone", () => {
     ...(process.env["E2E_ENGINE"] === "firefox" ? {} : { isMobile: true }),
   });
 
-  test("the mark costs a row no height and a thumb reaches its note", async ({ page, mine }) => {
+  test("the mark costs a row no height and a thumb reaches its note", async ({
+    page,
+    mine,
+    browserName,
+  }) => {
     const [ordinary] = await mine(1);
     const [short, shortPlain, pool] = tagged(SHORT_TAG, SHORT_PLAIN_TAG, POOL_TAG);
     if (
@@ -129,38 +166,43 @@ test.describe("on a phone", () => {
     await expect(rows.nth(2).getByRole("link", { name: "DCEX" })).toBeVisible();
     await expect(rows.nth(2).getByText("Stratum V2")).toHaveCount(1);
     const faults: string[] = [];
-    for (const width of [390, 320]) {
-      await page.setViewportSize({ width, height: 844 });
-      await tablesFit(page, `the blocks list at ${width} px`);
-      const [marked, plain] = await Promise.all([
-        rows.first().boundingBox(),
-        rows.nth(1).boundingBox(),
-      ]);
-      expect(marked?.height, `a marked row's height at ${width} px`).toBe(plain?.height);
-      // A tap anywhere on the mark lands in one place: the name's target reaches over all of it.
-      const lands = await rows
-        .first()
-        .locator(".block-sv2")
-        .evaluate((el) => {
-          el.scrollIntoView({ block: "center" });
-          const b = el.getBoundingClientRect();
-          const at = (fx: number, fy: number) =>
-            document
-              .elementFromPoint(b.x + b.width * fx, b.y + b.height * fy)
-              ?.closest("a")
-              ?.getAttribute("href");
-          return [
-            ...new Set([0.1, 0.5, 0.9].flatMap((x) => [0.05, 0.5, 0.95].map((y) => at(x, y)))),
-          ];
-        });
-      expect(lands, `where a tap on the mark lands at ${width} px`).toStrictEqual([
-        "/regtest/mining/pool/marapool",
-      ]);
-      for (const f of await layoutFaults(page)) faults.push(`the list at ${width} px: ${f}`);
-      for (const f of await smallTargets(page, "main"))
-        faults.push(`the list at ${width} px: ${f}`);
+    // A marked name's target covers its whole mark and stays in its row at the default text size,
+    // a small one (where a row is short) and a large one (where the mark outgrows a short name).
+    // Chromium alone lets a test set the text size.
+    const cdp = browserName === "chromium" ? await page.context().newCDPSession(page) : undefined;
+    const textSize = (px: number) =>
+      cdp?.send("Page.setFontSizes", {
+        fontSizes: { standard: px, fixed: Math.round((px * 13) / 16) },
+      });
+    for (const text of cdp ? [16, 12, 24] : [16]) {
+      await textSize(text);
+      for (const width of [390, 320]) {
+        await page.setViewportSize({ width, height: 844 });
+        const at = `${width} px with ${text} px text`;
+        // The layout checks first, from the top: measuring the marks scrolls the page.
+        await page.evaluate(() => window.scrollTo(0, 0));
+        if (text === 16) {
+          await tablesFit(page, `the blocks list at ${at}`);
+          for (const f of await layoutFaults(page)) faults.push(`the list at ${at}: ${f}`);
+          for (const f of await smallTargets(page, "main")) faults.push(`the list at ${at}: ${f}`);
+        }
+        const [marked, plain] = await Promise.all([
+          rows.first().boundingBox(),
+          rows.nth(1).boundingBox(),
+        ]);
+        expect(marked?.height, `a marked row's height at ${at}`).toBe(plain?.height);
+        for (const m of await marks(page)) {
+          if (m.lands.length !== 1 || m.lands[0] !== m.pool)
+            faults.push(`${m.name}'s mark at ${at} opens ${m.lands.join(" and ")}`);
+          if (m.out > 0.5)
+            faults.push(`${m.name}'s target at ${at} leaves its row by ${m.out.toFixed(1)} px`);
+        }
+      }
     }
+    await textSize(16);
+    expect(faults, "the blocks list").toStrictEqual([]);
     // A real tap on the mark's lowest row of pixels opens the pool's page.
+    await rows.first().evaluate((tr) => tr.scrollIntoView({ block: "center" }));
     const chip = await rows.first().locator(".block-sv2").boundingBox();
     if (chip === null) throw new Error("no mark");
     await page.touchscreen.tap(chip.x + chip.width / 2, chip.y + chip.height - 1);

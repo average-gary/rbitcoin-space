@@ -132,13 +132,17 @@
       max-width: 6.5rem;
     }
   }
-  /* On a touch phone the name's target reaches down over the whole mark under it, so a tap
-     anywhere on the mark opens the pool's page, as one on the age opens what the height does. */
+  /* On a touch phone the name's target covers the whole mark under it, so a tap anywhere on the
+     mark opens the pool's page, as one on the age opens what the height does: as wide as the
+     cell, and the 44 px centred on the name and mark together (no taller than they are when they
+     pass 44 px), so it stays in its row as an unmarked name's does. */
   @media (max-width: 40em) and (pointer: coarse) {
     .blocks-minercell:has(.block-sv2) .blocks-miner {
       --sv2-height: calc(var(--text-xs) * var(--leading-tight) + 2px);
-      padding-bottom: calc((var(--touch) - 1lh) / 2 + var(--sv2-height));
-      margin-bottom: calc((var(--touch) - 1lh) / -2 - var(--sv2-height));
+      --sv2-room: max(0px, (var(--touch) - 1lh - var(--sv2-height)) / 2);
+      justify-self: stretch;
+      padding-block: var(--sv2-room) calc(var(--sv2-room) + var(--sv2-height));
+      margin-block: calc(-1 * var(--sv2-room)) calc(-1 * var(--sv2-room) - var(--sv2-height));
     }
   }
   /* The smallest phones: smaller headers and a shorter miner, so four columns of mainnet's
