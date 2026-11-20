@@ -54,9 +54,11 @@ test("a Stratum V2 block is its pool field's pool, never its miner field's, and 
   await expect(named.getByRole("link")).toHaveText("MARA Pool");
   await expect(named.getByRole("link")).toHaveAttribute("href", "/regtest/mining/pool/marapool");
   // The mark, and what it rests on: said to a screen reader, and shown on focus.
-  const mark = named.getByRole("button", { name: "Sv2" });
+  const mark = named.getByRole("button", { name: "Sv2", exact: true });
   const note =
     /^Stratum V2 coinbase tag\. The coinbase is laid out as .* not something the chain proves\.$/;
+  // Named by its word alone: the note is its description, never part of its name.
+  await expect(mark).toHaveAccessibleName("Sv2");
   await expect(mark).toHaveAccessibleDescription(note);
   const shown = page.getByText("Sv2/<pool tag>/<miner tag>/").filter({ visible: true });
   await expect(shown).toHaveCount(1);
@@ -72,7 +74,7 @@ test("a Stratum V2 block is its pool field's pool, never its miner field's, and 
   await expect(tag).toContainText(MINER_TAG);
   const unnamed = page.getByRole("definition").filter({ hasText: "No listed address or tag" });
   await expect(unnamed.getByRole("link")).toHaveText("Unknown");
-  await expect(unnamed.getByRole("button", { name: "Sv2" })).toBeVisible();
+  await expect(unnamed.getByRole("button", { name: "Sv2", exact: true })).toBeVisible();
 
   await page.goto(`/regtest/block/${ordinary}`);
   await expect(unnamed.getByRole("link")).toHaveText("Unknown");
@@ -132,7 +134,7 @@ test.describe("on a phone", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/regtest/block/${pool.block}`);
     const fact = page.getByRole("definition").filter({ hasText: "By payout address or tag" });
-    const mark = fact.getByRole("button", { name: "Sv2" });
+    const mark = fact.getByRole("button", { name: "Sv2", exact: true });
     await expect(mark).toBeVisible();
     await expect(page.locator("main [aria-busy='true'], main .skel")).toHaveCount(0);
     for (const width of [390, 320]) {
