@@ -281,11 +281,19 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  /* The miner's name, cut where the column is narrow, and the Stratum V2 mark whole after it. */
+  /* Unmarked, the miner's link fills its line, as every value's does. Marked, the name is cut where
+     the column is narrow and the Stratum V2 mark follows it whole; a short name keeps a thumb's
+     width. */
   .block-miner {
+    display: block;
+  }
+  .block-miner:has(.block-sv2) {
     display: flex;
     align-items: baseline;
     gap: var(--space-2);
+  }
+  .block-miner:has(.block-sv2) > .block-fact__line {
+    min-width: var(--touch);
   }
   /* On this page the mark opens a note: room under its word for the dotted line that says so. */
   .block-miner .block-sv2 {

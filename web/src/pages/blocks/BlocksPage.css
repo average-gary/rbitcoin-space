@@ -41,11 +41,18 @@
     font-size: var(--text-xs);
     color: var(--color-text-muted);
   }
-  /* The miner's name, then the Stratum V2 mark (parts.css) on its baseline. */
+  /* Unmarked, the miner's link fills its cell. Marked, the name, then the Stratum V2 mark
+     (parts.css) on its baseline; a short name keeps a thumb's width. */
   .blocks-minercell {
+    display: block;
+  }
+  .blocks-minercell:has(.block-sv2) {
     display: flex;
     align-items: baseline;
     gap: var(--space-2);
+  }
+  .blocks-minercell:has(.block-sv2) > .blocks-miner {
+    min-width: var(--touch);
   }
   /* A pool's name is a list's spelling, so it can be long: one line, cut. */
   .blocks-miner {
@@ -116,13 +123,22 @@
     }
     /* The mark goes under the name, as the age goes under the height: the name keeps its width
        and the row its height. */
-    .blocks-minercell {
+    .blocks-minercell:has(.block-sv2) {
       display: grid;
       justify-items: start;
       gap: 0;
     }
     .blocks-miner {
       max-width: 6.5rem;
+    }
+  }
+  /* On a touch phone the name's target reaches down over the whole mark under it, so a tap
+     anywhere on the mark opens the pool's page, as one on the age opens what the height does. */
+  @media (max-width: 40em) and (pointer: coarse) {
+    .blocks-minercell:has(.block-sv2) .blocks-miner {
+      --sv2-height: calc(var(--text-xs) * var(--leading-tight) + 2px);
+      padding-bottom: calc((var(--touch) - 1lh) / 2 + var(--sv2-height));
+      margin-bottom: calc((var(--touch) - 1lh) / -2 - var(--sv2-height));
     }
   }
   /* The smallest phones: smaller headers and a shorter miner, so four columns of mainnet's

@@ -15,6 +15,9 @@ const REGTEST = fileURLToPath(new URL("../../dev/regtest/regtest.py", import.met
 // Mainnet block 976,280's tag, and one whose miner field holds a listed pool's tag.
 const POOL_TAG = "Sv2/MARA🇺🇸🇺🇸//";
 const MINER_TAG = "Sv2//Foundry USA Pool/";
+// A pool with a short name (DCEX, tagged `/DCEX/`), in the Stratum V2 layout and out of it.
+const SHORT_TAG = "Sv2/DCEX//";
+const SHORT_PLAIN_TAG = "/DCEX/";
 
 /** One hand-built block per tag, each ending in a 20-byte extranonce as the layout asks. */
 function tagged(...tags: string[]): { block: string }[] {
@@ -103,9 +106,9 @@ test.describe("on a phone", () => {
 
   test("the mark costs a row no height and a thumb reaches its note", async ({ page, mine }) => {
     const [ordinary] = await mine(1);
-    const [pool] = tagged(POOL_TAG);
-    if (pool === undefined || ordinary === undefined)
-      throw new Error("the harness made two blocks");
+    const [short, shortPlain, pool] = tagged(SHORT_TAG, SHORT_PLAIN_TAG, POOL_TAG);
+    if (pool === undefined || short === undefined || shortPlain === undefined || ordinary === undefined)
+      throw new Error("the harness made four blocks");
     await landed(page.request, pool.block);
 
     await page.setViewportSize({ width: 390, height: 844 });
@@ -115,7 +118,7 @@ test.describe("on a phone", () => {
       .locator("tbody tr");
     await expect(rows.first().getByRole("link", { name: "MARA Pool" })).toBeVisible();
     await expect(rows.first().getByText("Stratum V2")).toHaveCount(1);
-    await expect(rows.nth(1).getByRole("link", { name: "Unknown" })).toBeVisible();
+    await expect(rows.nth(1).getByRole("link", { name: "DCEX" })).toBeVisible();
     await expect(rows.nth(1).getByText("Stratum V2")).toHaveCount(0);
     const faults: string[] = [];
     for (const width of [390, 320]) {
@@ -126,10 +129,34 @@ test.describe("on a phone", () => {
         rows.nth(1).boundingBox(),
       ]);
       expect(marked?.height, `a marked row's height at ${width} px`).toBe(plain?.height);
+      // A tap anywhere on the mark lands in one place: the name's target reaches over all of it.
+      const lands = await rows
+        .first()
+        .locator(".block-sv2")
+        .evaluate((el) => {
+          el.scrollIntoView({ block: "center" });
+          const b = el.getBoundingClientRect();
+          const at = (fx: number, fy: number) =>
+            document
+              .elementFromPoint(b.x + b.width * fx, b.y + b.height * fy)
+              ?.closest("a")
+              ?.getAttribute("href");
+          return [
+            ...new Set([0.1, 0.5, 0.9].flatMap((x) => [0.05, 0.5, 0.95].map((y) => at(x, y)))),
+          ];
+        });
+      expect(lands, `where a tap on the mark lands at ${width} px`).toStrictEqual([
+        "/regtest/mining/pool/marapool",
+      ]);
       for (const f of await layoutFaults(page)) faults.push(`the list at ${width} px: ${f}`);
       for (const f of await smallTargets(page, "main"))
         faults.push(`the list at ${width} px: ${f}`);
     }
+    // A real tap on the mark's lowest row of pixels opens the pool's page.
+    const chip = await rows.first().locator(".block-sv2").boundingBox();
+    if (chip === null) throw new Error("no mark");
+    await page.touchscreen.tap(chip.x + chip.width / 2, chip.y + chip.height - 1);
+    await expect(page).toHaveURL(/\/regtest\/mining\/pool\/marapool$/);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/regtest/block/${pool.block}`);
@@ -156,5 +183,34 @@ test.describe("on a phone", () => {
     await mark.tap();
     await expect(shown).toHaveCount(2);
     await expect(shown.last()).toBeInViewport({ ratio: 1 });
+
+    // A short name's link is a thumb's width, marked or not; unmarked, it fills its line as every
+    // value's link does.
+    for (const [block, marked] of [
+      [short.block, true],
+      [shortPlain.block, false],
+    ] as const) {
+      await page.goto(`/regtest/block/${block}`);
+      const named = page.getByRole("definition").filter({ hasText: "By payout address or tag" });
+      const link = named.getByRole("link");
+      await expect(link).toHaveText("DCEX");
+      await expect(named.getByRole("button", { name: "Sv2", exact: true })).toHaveCount(
+        marked ? 1 : 0,
+      );
+      await expect(page.locator("main [aria-busy='true'], main .skel")).toHaveCount(0);
+      for (const width of [390, 320]) {
+        await page.setViewportSize({ width, height: 844 });
+        const where = `DCEX's block${marked ? ", marked," : ""} at ${width} px`;
+        if (!marked) {
+          const [own, line] = await link.evaluate((a) => [
+            a.getBoundingClientRect().width,
+            a.parentElement?.getBoundingClientRect().width,
+          ]);
+          expect(own, where).toBe(line);
+        }
+        for (const f of await smallTargets(page, ".block-facts")) faults.push(`${where}: ${f}`);
+      }
+    }
+    expect(faults).toStrictEqual([]);
   });
 });
