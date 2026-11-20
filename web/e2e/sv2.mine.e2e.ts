@@ -107,7 +107,12 @@ test.describe("on a phone", () => {
   test("the mark costs a row no height and a thumb reaches its note", async ({ page, mine }) => {
     const [ordinary] = await mine(1);
     const [short, shortPlain, pool] = tagged(SHORT_TAG, SHORT_PLAIN_TAG, POOL_TAG);
-    if (pool === undefined || short === undefined || shortPlain === undefined || ordinary === undefined)
+    if (
+      pool === undefined ||
+      short === undefined ||
+      shortPlain === undefined ||
+      ordinary === undefined
+    )
       throw new Error("the harness made four blocks");
     await landed(page.request, pool.block);
 
